@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\SaveWise.BusinessLogic\SaveWise.BusinessLogic.csproj" />
       <ProjectReference Include="..\SaveWise.DataLayer\SaveWise.DataLayer.csproj" />
     </ItemGroup>
 

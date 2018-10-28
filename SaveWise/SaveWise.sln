@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaveWise.Api", "SaveWise.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaveWise.DataLayer", "SaveWise.DataLayer\SaveWise.DataLayer.csproj", "{DD2418E0-84A7-4D7D-86BA-EAFC666A6EA2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaveWise.BusinessLogic", "SaveWise.BusinessLogic\SaveWise.BusinessLogic.csproj", "{F097CB04-8D56-4D89-8150-4EE597F66E43}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{DD2418E0-84A7-4D7D-86BA-EAFC666A6EA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD2418E0-84A7-4D7D-86BA-EAFC666A6EA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD2418E0-84A7-4D7D-86BA-EAFC666A6EA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F097CB04-8D56-4D89-8150-4EE597F66E43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F097CB04-8D56-4D89-8150-4EE597F66E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F097CB04-8D56-4D89-8150-4EE597F66E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F097CB04-8D56-4D89-8150-4EE597F66E43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -11,6 +11,6 @@ namespace SaveWise.DataLayer.Models
         [Required(ErrorMessage = "Rok planu budżetu jest wymagany")]
         public int? Year { get; set; }
 
-        public IEnumerable<Expense> Expenses { get; set; }
+        public IList<Expense> Expenses { get; set; }
     }
 }
