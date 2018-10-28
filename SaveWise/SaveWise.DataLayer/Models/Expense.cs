@@ -6,7 +6,7 @@ namespace SaveWise.DataLayer.Models
     {
         public string Id { get; set; }
 
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
 
         public float Amount { get; set; }
 

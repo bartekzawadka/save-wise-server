@@ -15,10 +15,8 @@ namespace SaveWise.DataLayer
         public string CollectionName => Collection?.CollectionNamespace.CollectionName;
         
         
-        public GenericRepository(ISaveWiseContext context)
+        public GenericRepository(ISaveWiseContext context, string collectionName)
         {
-            var collectionName = Regex.Replace(nameof(TCollection), "(\\B[A-Z])", ".$1");
-            
             Collection = context.Database.GetCollection<TCollection>(collectionName);
         }
         

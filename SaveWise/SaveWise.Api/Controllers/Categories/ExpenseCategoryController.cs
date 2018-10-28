@@ -4,24 +4,25 @@ using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Sys;
 
-namespace SaveWise.Api.Controllers
+namespace SaveWise.Api.Controllers.Categories
 {
-    public class PlanController : ControllerBase
+    [Route("api/category/expense")]
+    public class ExpenseCategoryController : ControllerBase
     {
-        private readonly IService<Plan> _planService;
+        private readonly IService<ExpenseCategory> _categoryService;
 
-        public PlanController(IService<Plan> planService)
+        public ExpenseCategoryController(IService<ExpenseCategory> categoryService)
         {
-            _planService = planService;
+            _categoryService = categoryService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var plans = await _planService.GetAsync<Filter<Plan>>(null);
-            return Ok(plans);
+            var categories = await _categoryService.GetAsync<Filter<ExpenseCategory>>(null);
+            return Ok(categories);
         }
-
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
@@ -29,33 +30,33 @@ namespace SaveWise.Api.Controllers
             {
                 return BadRequest(GetErrorFromModelState());
             }
-
-            var document = await _planService.GetByIdAsync(id);
-            return Ok(document);
+            
+            var value = await _categoryService.GetByIdAsync(id);
+            return Ok(value);
         }
-        
+
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Plan plan)
+        public async Task<IActionResult> Post([FromBody] ExpenseCategory category)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
-            await _planService.InsertAsync(plan);
-            return Ok(plan);
+
+            await _categoryService.InsertAsync(category);
+            return Ok(category);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(string id, [FromBody] Plan plan)
+        public async Task<IActionResult> Put(string id, [FromBody] ExpenseCategory category)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
-            await _planService.UpdateAsync(id, plan);
-            return Ok(plan);
+
+            await _categoryService.UpdateAsync(id, category);
+            return Ok(category);
         }
 
         [HttpDelete("{id}")]
@@ -65,8 +66,8 @@ namespace SaveWise.Api.Controllers
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
-            var result = await _planService.DeleteAsync(id);
+
+            var result = await _categoryService.DeleteAsync(id);
             return Ok(new {result});
         }
     }

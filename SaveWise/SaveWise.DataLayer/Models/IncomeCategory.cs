@@ -1,7 +1,6 @@
 namespace SaveWise.DataLayer.Models
 {
-    public class IncomeCategory : Document
+    public class IncomeCategory : Category
     {
-        public string Name { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using SaveWise.BusinessLogic.Services;
 
 namespace SaveWise.Api.Controllers
 {
+    [Route("api/[controller]")]
     public class ExpenseController : Controller
     {
         private readonly IExpenseService _expenseService;

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using SaveWise.DataLayer.Models;
 
 namespace SaveWise.DataLayer
@@ -15,7 +16,9 @@ namespace SaveWise.DataLayer
 
         public IGenericRepository<T> GetGenericRepository<T>() where T : Document
         {
-            var repo = _repositoriesDictionary.GetOrAdd(nameof(T), new GenericRepository<T>(_context));
+            var name = Regex.Replace(typeof(T).Name, "(\\B[A-Z])", ".$1").ToLower();
+            
+            var repo = _repositoriesDictionary.GetOrAdd(name, new GenericRepository<T>(_context, name));
             if (repo is IGenericRepository<T> genericRepository)
             {
                 return genericRepository;

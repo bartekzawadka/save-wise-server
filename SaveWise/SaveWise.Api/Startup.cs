@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer;
+using SaveWise.DataLayer.Models;
 
 namespace SaveWise.Api
 {
@@ -32,9 +33,11 @@ namespace SaveWise.Api
             services.AddSingleton<ISaveWiseContext>(new SaveWiseContext(
                 connectionStringSection.Value,
                 databaseSection.Value));
-            services.AddSingleton<IRepositoryFactory, RepositoryFactory>();
-
+            services.AddTransient<IRepositoryFactory, RepositoryFactory>();
             services.AddTransient<IExpenseService, ExpenseService>();
+            services.AddTransient<IService<Plan>, PlanService>();
+            services.AddTransient<IService<ExpenseCategory>, Service<ExpenseCategory>>();
+            services.AddTransient<IService<IncomeCategory>, Service<IncomeCategory>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
