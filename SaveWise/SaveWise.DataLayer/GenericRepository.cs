@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using SaveWise.DataLayer.Models;
@@ -8,18 +9,18 @@ using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.DataLayer
 {
-    public class GenericRepository<TCollection> where TCollection : Document
+    public class GenericRepository<TCollection> : IGenericRepository<TCollection> where TCollection : Document
     {
         private IMongoCollection<TCollection> Collection { get; set; }
-        public string CollectionName { get; }
+        public string CollectionName => Collection?.CollectionNamespace.CollectionName;
         
-        public GenericRepository(IMongoCollection<TCollection> collection)
+        
+        public GenericRepository(ISaveWiseContext context, string collectionName)
         {
-            Collection = collection;
-            CollectionName = collection.CollectionNamespace.CollectionName;
+            Collection = context.Database.GetCollection<TCollection>(collectionName);
         }
         
-        public virtual Task<List<TCollection>> Get<TFilter>(TFilter filter)
+        public virtual Task<List<TCollection>> GetAsync<TFilter>(TFilter filter)
             where TFilter : Filter<TCollection>, new()
         {
             if (filter == null)
@@ -60,34 +61,34 @@ namespace SaveWise.DataLayer
             return query.ToListAsync();
         }
         
-        public virtual Task<TCollection> GetById(string id)
+        public virtual Task<TCollection> GetByIdAsync(string id)
         {
             var query = Collection.Find(f => f.Id == id);
             return query.SingleOrDefaultAsync();
         }
 
-        public virtual Task Insert(TCollection document)
+        public virtual Task InsertAsync(TCollection document)
         {
             return Collection.InsertOneAsync(document);
         }
 
-        public virtual Task InsertMany(IEnumerable<TCollection> documents)
+        public virtual Task InsertManyAsync(IEnumerable<TCollection> documents)
         {
             return Collection.InsertManyAsync(documents);
         }
 
-        public virtual Task Update(string id, TCollection document)
+        public virtual Task UpdateAsync(string id, TCollection document)
         {
             return Collection.ReplaceOneAsync(f => string.Equals(f.Id, id), document);
         }
 
-        public virtual async Task<bool> Delete(string id)
+        public virtual async Task<bool> DeleteAsync(string id)
         {
             var actionResult = await Collection.DeleteOneAsync(f => f.Id == id);
             return actionResult.IsAcknowledged && actionResult.DeletedCount > 0;
         }
 
-        public virtual async Task<bool> DeleteMany(IEnumerable<string> ids)
+        public virtual async Task<bool> DeleteManyAsync(IEnumerable<string> ids)
         {
             var result = await Collection.DeleteManyAsync(collection => ids.Contains(collection.Id));
             return result.IsAcknowledged && result.DeletedCount > 0;

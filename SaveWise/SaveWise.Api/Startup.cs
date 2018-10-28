@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer;
+using SaveWise.DataLayer.Models;
 
 namespace SaveWise.Api
 {
@@ -25,9 +27,17 @@ namespace SaveWise.Api
             
             IConfigurationSection connectionStringSection =
                 Configuration.GetSection("MongoConnection:ConnectionString");
-            IConfigurationSection databaseSection = Configuration.GetSection("MongoConnection:Database");
             
-            UnitOfWork.Initialize(connectionStringSection.Value, databaseSection.Value);
+            IConfigurationSection databaseSection = Configuration.GetSection("MongoConnection:Database");
+
+            services.AddSingleton<ISaveWiseContext>(new SaveWiseContext(
+                connectionStringSection.Value,
+                databaseSection.Value));
+            services.AddTransient<IRepositoryFactory, RepositoryFactory>();
+            services.AddTransient<IExpenseService, ExpenseService>();
+            services.AddTransient<IService<Plan>, PlanService>();
+            services.AddTransient<IService<ExpenseCategory>, Service<ExpenseCategory>>();
+            services.AddTransient<IService<IncomeCategory>, Service<IncomeCategory>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

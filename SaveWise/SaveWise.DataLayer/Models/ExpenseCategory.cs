@@ -2,10 +2,8 @@ using System.Collections.Generic;
 
 namespace SaveWise.DataLayer.Models
 {
-    public class ExpenseCategory : Document
+    public class ExpenseCategory : Category
     {
-        public string Name { get; set; }
-
         public IEnumerable<ExpenseType> Types { get; set; }
     }
 }

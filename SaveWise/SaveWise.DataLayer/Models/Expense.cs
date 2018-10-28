@@ -4,7 +4,9 @@ namespace SaveWise.DataLayer.Models
 {
     public class Expense
     {
-        public DateTime Date { get; set; }
+        public string Id { get; set; }
+
+        public DateTime? Date { get; set; }
 
         public float Amount { get; set; }
 
