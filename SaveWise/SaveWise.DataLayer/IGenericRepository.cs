@@ -10,7 +10,7 @@ namespace SaveWise.DataLayer
     {
         string CollectionName { get; }
 
-        Task<List<TCollection>> GetAsync<TFilter>(TFilter filter)
+        Task<List<TCollection>> GetAsync<TFilter>(TFilter filter = null)
             where TFilter : Filter<TCollection>, new();
 
         Task<TCollection> GetByIdAsync(string id);

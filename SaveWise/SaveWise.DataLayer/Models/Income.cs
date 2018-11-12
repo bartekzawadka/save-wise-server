@@ -2,7 +2,7 @@ namespace SaveWise.DataLayer.Models
 {
     public class Income
     {
-        public string Category { get; set; }
+        public IncomeCategory Category { get; set; }
 
         public float Amount { get; set; }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SaveWise.BusinessLogic.Services;
@@ -9,9 +10,9 @@ namespace SaveWise.Api.Controllers.Categories
     [Route("api/category/income")]
     public class IncomeCategoryController : ControllerBase
     {
-        private readonly IService<IncomeCategory> _categoryService;
+        private readonly IIncomeCategoryService _categoryService;
 
-        public IncomeCategoryController(IService<IncomeCategory> categoryService)
+        public IncomeCategoryController(IIncomeCategoryService categoryService)
         {
             _categoryService = categoryService;
         }
@@ -44,6 +45,18 @@ namespace SaveWise.Api.Controllers.Categories
             }
 
             await _categoryService.InsertAsync(category);
+            return Ok(category);
+        }
+        
+        [HttpPost("multiple")]
+        public async Task<IActionResult> Post([FromBody] IEnumerable<IncomeCategory> category)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(GetErrorFromModelState());
+            }
+
+            await _categoryService.InsertManyAsync(category);
             return Ok(category);
         }
 

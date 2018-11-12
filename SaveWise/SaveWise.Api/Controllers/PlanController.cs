@@ -8,9 +8,9 @@ namespace SaveWise.Api.Controllers
 {
     public class PlanController : ControllerBase
     {
-        private readonly IService<Plan> _planService;
+        private readonly IPlanService _planService;
 
-        public PlanController(IService<Plan> planService)
+        public PlanController(IPlanService planService)
         {
             _planService = planService;
         }
@@ -32,6 +32,18 @@ namespace SaveWise.Api.Controllers
 
             var document = await _planService.GetByIdAsync(id);
             return Ok(document);
+        }
+
+        [HttpGet("new")]
+        public async Task<IActionResult> GetNewPlanIncomeCategories()
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(GetErrorFromModelState());
+            }
+
+            var result = await _planService.GetNewPlanIncomeCategoriesAsync();
+            return Ok(result);
         }
         
         [HttpPost]

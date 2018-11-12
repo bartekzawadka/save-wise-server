@@ -35,9 +35,9 @@ namespace SaveWise.Api
                 databaseSection.Value));
             services.AddTransient<IRepositoryFactory, RepositoryFactory>();
             services.AddTransient<IExpenseService, ExpenseService>();
-            services.AddTransient<IService<Plan>, PlanService>();
+            services.AddTransient<IPlanService, PlanService>();
             services.AddTransient<IService<ExpenseCategory>, Service<ExpenseCategory>>();
-            services.AddTransient<IService<IncomeCategory>, Service<IncomeCategory>>();
+            services.AddTransient<IIncomeCategoryService, IncomeCategoryService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
