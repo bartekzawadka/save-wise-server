@@ -1,20 +1,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SaveWise.BusinessLogic.Common;
 using SaveWise.DataLayer;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Models.Filters;
+using SaveWise.DataLayer.Models.Plans;
 using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.BusinessLogic.Services
 {
     public class PlanService : Service<Plan>, IPlanService
     {
-        public PlanService(IRepositoryFactory repositoryFactory) : base(repositoryFactory)
+        private readonly PredefinedCategories _predefinedCategories;
+
+        public PlanService(
+            IRepositoryFactory repositoryFactory,
+            PredefinedCategories predefinedCategories)
+            : base(repositoryFactory)
         {
+            _predefinedCategories = predefinedCategories;
         }
 
-        public async Task<IList<IncomeCategory>> GetNewPlanIncomeCategoriesAsync()
+        public async Task<NewPlan> GetNewPlanAsync()
         {
             var plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
@@ -30,34 +38,32 @@ namespace SaveWise.BusinessLogic.Services
             };
 
             var lastPlan = (await plansRepo.GetAsync(filter)).FirstOrDefault();
-            if (lastPlan == null || lastPlan.PlannedIncomes?.Any() != true)
-            {
-                return GetPredefinedIncomeCategories();
-            }
 
-            return lastPlan.PlannedIncomes.Select(income => income.Category).ToList();
-        }
+            var incomeCategories = (lastPlan == null || lastPlan.PlannedIncomes?.Any() != true)
+                ? _predefinedCategories.IncomeCategories
+                : lastPlan.PlannedIncomes.Select(income => new IncomeCategory
+                {
+                    Name = income.Category
+                }).ToList();
 
-        private static IList<IncomeCategory> GetPredefinedIncomeCategories()
-        {
-            return new List<IncomeCategory>
+            var expenseCategories = (lastPlan == null || lastPlan.PlannedExpenses?.Any() != true)
+                ? _predefinedCategories.ExpenseCategories
+                : lastPlan.PlannedExpenses.GroupBy(x => x.Category).Select(item =>
+                {
+                    return new ExpenseCategory
+                    {
+                        Name = item.Key,
+                        Types = item.Select(x => new ExpenseType
+                        {
+                            Name = x.Type
+                        })
+                    };
+                });
+            
+            return new NewPlan
             {
-                new IncomeCategory
-                {
-                    Name = "Wynagrodzenie"
-                },
-                new IncomeCategory
-                {
-                    Name = "Wynagrodzenie Partnera / Partnerki"
-                },
-                new IncomeCategory
-                {
-                    Name = "Premia"
-                },
-                new IncomeCategory
-                {
-                    Name = "Inne przychody"
-                },
+                IncomeCategories = incomeCategories,
+                ExpenseCategories = expenseCategories
             };
         }
     }

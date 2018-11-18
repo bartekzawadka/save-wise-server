@@ -42,7 +42,7 @@ namespace SaveWise.Api.Controllers
                 return BadRequest(GetErrorFromModelState());
             }
 
-            var result = await _planService.GetNewPlanIncomeCategoriesAsync();
+            var result = await _planService.GetNewPlanAsync();
             return Ok(result);
         }
         

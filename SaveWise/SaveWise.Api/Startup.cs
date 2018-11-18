@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using SaveWise.BusinessLogic.Common;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer;
 using SaveWise.DataLayer.Models;
@@ -29,6 +30,11 @@ namespace SaveWise.Api
                 Configuration.GetSection("MongoConnection:ConnectionString");
             
             IConfigurationSection databaseSection = Configuration.GetSection("MongoConnection:Database");
+
+            
+            var predefinedCategories = Configuration.GetSection("PredefinedCategories").Get<PredefinedCategories>();
+
+            services.AddSingleton(predefinedCategories);
 
             services.AddSingleton<ISaveWiseContext>(new SaveWiseContext(
                 connectionStringSection.Value,
