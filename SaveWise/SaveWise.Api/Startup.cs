@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using SaveWise.Api.Extensions;
 using SaveWise.BusinessLogic.Common;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer;
@@ -58,6 +59,7 @@ namespace SaveWise.Api
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .WithExposedHeaders("Content-Disposition"));
+            app.ConfigureExceptionHandler();
             
             app.UseMvc();
         }
