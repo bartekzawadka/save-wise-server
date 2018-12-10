@@ -14,6 +14,8 @@ namespace SaveWise.BusinessLogic.Services
 
         Task InsertAsync(TDocument document);
 
+        Task InsertManyAsync(IEnumerable<TDocument> documents);
+
         Task UpdateAsync(string id, TDocument document);
 
         Task<bool> DeleteAsync(string id);

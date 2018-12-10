@@ -20,17 +20,12 @@ namespace SaveWise.DataLayer
             Collection = context.Database.GetCollection<TCollection>(collectionName);
         }
         
-        public virtual Task<List<TCollection>> GetAsync<TFilter>(TFilter filter)
+        public virtual Task<List<TCollection>> GetAsync<TFilter>(TFilter filter = null)
             where TFilter : Filter<TCollection>, new()
         {
             if (filter == null)
             {
                 filter = new TFilter();
-            }
-
-            if (filter.FilterExpression == null)
-            {
-                filter.FilterExpression = collection => true;
             }
 
             var query = Collection.Find(filter.FilterExpression);

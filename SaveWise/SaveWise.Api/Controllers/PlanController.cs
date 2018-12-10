@@ -1,5 +1,7 @@
+using System.Data;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Sys;
@@ -8,9 +10,9 @@ namespace SaveWise.Api.Controllers
 {
     public class PlanController : ControllerBase
     {
-        private readonly IService<Plan> _planService;
+        private readonly IPlanService _planService;
 
-        public PlanController(IService<Plan> planService)
+        public PlanController(IPlanService planService)
         {
             _planService = planService;
         }
@@ -20,6 +22,12 @@ namespace SaveWise.Api.Controllers
         {
             var plans = await _planService.GetAsync<Filter<Plan>>(null);
             return Ok(plans);
+        }
+
+        [HttpGet("current")]
+        public async Task<IActionResult> GetCurrent()
+        {
+            return Ok(await _planService.GetCurrentPlanAsync());
         }
 
         [HttpGet("{id}")]
@@ -33,6 +41,18 @@ namespace SaveWise.Api.Controllers
             var document = await _planService.GetByIdAsync(id);
             return Ok(document);
         }
+
+        [HttpGet("new")]
+        public async Task<IActionResult> GetNewPlanIncomeCategories()
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(GetErrorFromModelState());
+            }
+
+            var result = await _planService.GetNewPlanAsync();
+            return Ok(result);
+        }
         
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Plan plan)
@@ -41,8 +61,16 @@ namespace SaveWise.Api.Controllers
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
-            await _planService.InsertAsync(plan);
+
+            try
+            {
+                await _planService.InsertAsync(plan);
+            }
+            catch (DuplicateNameException e)
+            {
+                return BadRequest(new ErrorResult(e.Message).ToJson());
+            }
+
             return Ok(plan);
         }
 
@@ -67,7 +95,7 @@ namespace SaveWise.Api.Controllers
             }
             
             var result = await _planService.DeleteAsync(id);
-            return Ok(new {result});
+            return Ok(result);
         }
     }
 }
