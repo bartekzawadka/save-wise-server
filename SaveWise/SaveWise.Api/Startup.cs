@@ -1,8 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using SaveWise.Api.Common;
 using SaveWise.Api.Extensions;
 using SaveWise.BusinessLogic.Common;
 using SaveWise.BusinessLogic.Services;
@@ -26,6 +31,44 @@ namespace SaveWise.Api
             services
                 .AddMvc()
                 .AddJsonOptions(options => options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore);
+
+            var securitySettings = Configuration.GetSection("SecuritySettings");
+            services.Configure<SecuritySettings>(securitySettings);
+            
+            var secret = Encoding.ASCII.GetBytes(securitySettings.Get<SecuritySettings>().Secret);
+
+            services.AddAuthentication(auth =>
+            {
+                auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(jwt =>
+                {
+                    jwt.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
+                            var userId = context.Principal.Identity.Name;
+                            var user = userService.GetById(userId);
+                            if (user == null)
+                            {
+                                context.Fail("Unauthorized");
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                    jwt.RequireHttpsMetadata = false;
+                    jwt.SaveToken = true;
+                    jwt.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(secret),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
             
             IConfigurationSection connectionStringSection =
                 Configuration.GetSection("MongoConnection:ConnectionString");
@@ -40,6 +83,7 @@ namespace SaveWise.Api
             services.AddSingleton<ISaveWiseContext>(new SaveWiseContext(
                 connectionStringSection.Value,
                 databaseSection.Value));
+            services.AddScoped<IUserService, UserService>();
             services.AddTransient<IRepositoryFactory, RepositoryFactory>();
             services.AddTransient<IExpenseService, ExpenseService>();
             services.AddTransient<IPlanService, PlanService>();
@@ -58,8 +102,11 @@ namespace SaveWise.Api
             app.UseCors(options => options.WithOrigins("*")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
+                .AllowCredentials()
                 .WithExposedHeaders("Content-Disposition"));
             app.ConfigureExceptionHandler();
+
+            app.UseAuthentication();
             
             app.UseMvc();
         }

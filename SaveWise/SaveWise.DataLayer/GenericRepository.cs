@@ -62,6 +62,12 @@ namespace SaveWise.DataLayer
             return query.SingleOrDefaultAsync();
         }
 
+        public virtual TCollection GetById(string id)
+        {
+            var query = Collection.Find(f => string.Equals(f.Id, id));
+            return query.SingleOrDefault();
+        }
+
         public virtual Task InsertAsync(TCollection document)
         {
             return Collection.InsertOneAsync(document);
