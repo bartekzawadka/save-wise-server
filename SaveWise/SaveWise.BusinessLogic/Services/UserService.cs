@@ -4,24 +4,23 @@ using System.Linq;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using SaveWise.DataLayer;
 using SaveWise.DataLayer.Models;
-using SaveWise.DataLayer.Sys;
+using SaveWise.DataLayer.User;
 
 namespace SaveWise.BusinessLogic.Services
 {
     public class UserService : IUserService
     {
-        private readonly IRepositoryFactory _repositoryFactory;
+        private readonly IUserRepository _userRepository;
 
-        public UserService(IRepositoryFactory repositoryFactory)
+        public UserService(IUserRepository userRepository)
         {
-            _repositoryFactory = repositoryFactory;
+            _userRepository = userRepository;
         }
 
         public User GetById(string id)
         {
-            return _repositoryFactory.GetGenericRepository<User>().GetById(id);
+            return _userRepository.GetById(id);
         }
 
         public async Task<User> AuthenticateAsync(string username, string password)
@@ -36,12 +35,7 @@ namespace SaveWise.BusinessLogic.Services
                 throw new AuthenticationException("Password is required");
             }
 
-            var userFilter = new Filter<User>
-            {
-                FilterExpression = u => string.Equals(u.Username, username)
-            };
-
-            var user = (await _repositoryFactory.GetGenericRepository<User>().GetAsync(userFilter)).SingleOrDefault();
+            var user = await _userRepository.GetByNameAsync(username);
             if (user == null)
             {
                 throw new AuthenticationException($"User '{username}' could not be found");
@@ -55,34 +49,26 @@ namespace SaveWise.BusinessLogic.Services
             return user;
         }
 
-        public async Task<User> CreateAsync(User user)
+        public async Task CreateAsync(User user)
         {
             if (user == null || string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Password))
             {
                 throw new ArgumentNullException(nameof(user), "Missing account parameters");
             }
 
-            var usersRepository = _repositoryFactory.GetGenericRepository<User>();
-            var existingUserFilter = new Filter<User>
-            {
-                FilterExpression = u => string.Equals(u.Username, user.Username)
-            };
-
-            var existingUsers = await usersRepository.GetAsync(existingUserFilter);
-            if (existingUsers.Any())
+            if (await _userRepository.GetUserExists(user.Username))
             {
                 throw new DuplicateNameException($"User '{user.Username}' already exists");
             }
             
             CreatePasswordHash(user);
 
-            await usersRepository.InsertAsync(user);
-            return user;
+            await _userRepository.InsertAsync(user);
         }
 
-        public Task<bool> DeleteAsync(string id)
+        public Task DeleteAsync(string id)
         {
-            return _repositoryFactory.GetGenericRepository<User>().DeleteAsync(id);
+            return _userRepository.DeleteAsync(id);
         }
 
         public async Task ChangePassword(string username, string password, string passwordConfirm)
@@ -99,14 +85,7 @@ namespace SaveWise.BusinessLogic.Services
                 throw new AuthenticationException("New password does not match confirmed value");
             }
 
-            var usersRepository = _repositoryFactory.GetGenericRepository<User>();
-            var userFilter = new Filter<User>
-            {
-                FilterExpression = u => string.Equals(u.Username, username)
-            };
-
-            var users = await usersRepository.GetAsync(userFilter);
-            var user = users?.SingleOrDefault();
+            var user = await _userRepository.GetByNameAsync(username);
             if (user == null)
             {
                 throw new AuthenticationException($"User '{username}' could not be found or more than one such users found");
@@ -115,7 +94,7 @@ namespace SaveWise.BusinessLogic.Services
             user.Password = password;
             CreatePasswordHash(user);
 
-            await usersRepository.UpdateAsync(user.Id, user);
+            await _userRepository.UpdateAsync(user.Id, user);
         }
         
         private static void CreatePasswordHash(User user)

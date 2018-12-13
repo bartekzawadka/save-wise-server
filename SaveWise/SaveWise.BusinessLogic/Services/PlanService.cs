@@ -26,7 +26,7 @@ namespace SaveWise.BusinessLogic.Services
         }
 
         public async Task<Plan> GetCurrentPlanAsync()
-        {
+        {           
             var plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {

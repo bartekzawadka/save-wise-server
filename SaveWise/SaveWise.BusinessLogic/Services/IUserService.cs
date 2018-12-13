@@ -9,9 +9,9 @@ namespace SaveWise.BusinessLogic.Services
         
         Task<User> AuthenticateAsync(string username, string password);
 
-        Task<User> CreateAsync(User user);
+        Task CreateAsync(User user);
 
-        Task<bool> DeleteAsync(string id);
+        Task DeleteAsync(string id);
 
         Task ChangePassword(string username, string password, string passwordConfirm);
     }

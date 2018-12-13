@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +14,8 @@ using SaveWise.BusinessLogic.Common;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer;
 using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Sys;
+using SaveWise.DataLayer.User;
 
 namespace SaveWise.Api
 {
@@ -79,11 +82,14 @@ namespace SaveWise.Api
             var predefinedCategories = Configuration.GetSection("PredefinedCategories").Get<PredefinedCategories>();
 
             services.AddSingleton(predefinedCategories);
-
+            
+            services.AddSingleton<IIdentityProvider, IdentityProvider>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<ISaveWiseContext>(new SaveWiseContext(
                 connectionStringSection.Value,
                 databaseSection.Value));
             services.AddScoped<IUserService, UserService>();
+            services.AddTransient<IUserRepository, UserRepository>();
             services.AddTransient<IRepositoryFactory, RepositoryFactory>();
             services.AddTransient<IExpenseService, ExpenseService>();
             services.AddTransient<IPlanService, PlanService>();

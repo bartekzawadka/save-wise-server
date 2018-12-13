@@ -1,5 +1,6 @@
 using System.Data;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using SaveWise.BusinessLogic.Services;
@@ -8,6 +9,7 @@ using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.Api.Controllers
 {
+    [Authorize]
     public class PlanController : ControllerBase
     {
         private readonly IPlanService _planService;

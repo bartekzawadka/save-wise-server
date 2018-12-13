@@ -9,5 +9,7 @@ namespace SaveWise.DataLayer.Models
         [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
         [BsonRepresentation(BsonType.String)]
         public string Id { get; set; }
+        
+        public string UserId { get; set; }
     }
 }
