@@ -59,6 +59,8 @@ namespace SaveWise.BusinessLogic.Services
             {
                 throw new DuplicateNameException("Już istnieje plan budżetowy dla wybranego okresu");
             }
+
+            await repo.InsertAsync(document);
         }
 
         public async Task<NewPlan> GetNewPlanAsync()

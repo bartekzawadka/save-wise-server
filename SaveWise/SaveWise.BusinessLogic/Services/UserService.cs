@@ -3,8 +3,10 @@ using System.Data;
 using System.Linq;
 using System.Security.Authentication;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Models.Users;
 using SaveWise.DataLayer.User;
 
 namespace SaveWise.BusinessLogic.Services
@@ -27,39 +29,50 @@ namespace SaveWise.BusinessLogic.Services
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                throw new AuthenticationException("Username is required");
+                throw new AuthenticationException("Nazwa użytkownika jest wymagana");
             }
 
             if (string.IsNullOrWhiteSpace(password))
             {
-                throw new AuthenticationException("Password is required");
+                throw new AuthenticationException("Hasło jest wymagane");
             }
 
             var user = await _userRepository.GetByNameAsync(username);
             if (user == null)
             {
-                throw new AuthenticationException($"User '{username}' could not be found");
+                throw new AuthenticationException("Nieprawidłowa nazwa użytkownika lub hasło");
             }
 
             if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
             {
-                throw new AuthenticationException("Invalid password");
+                throw new AuthenticationException("Nieprawidłowa nazwa użytkownika lub hasło");
             }
 
             return user;
         }
 
-        public async Task CreateAsync(User user)
+        public async Task CreateAsync(Register registration)
         {
-            if (user == null || string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Password))
+            if (registration == null || string.IsNullOrWhiteSpace(registration.Username) || string.IsNullOrWhiteSpace(registration.Password))
             {
-                throw new ArgumentNullException(nameof(user), "Missing account parameters");
+                throw new ArgumentNullException(nameof(registration), "Brak danych do rejestracji");
+            }
+            
+            if (!string.Equals(registration.Password, registration.PasswordConfirm))
+            {
+                throw new AuthenticationException("Potwierdzenie hasła różni się od oryginału");
             }
 
-            if (await _userRepository.GetUserExists(user.Username))
+            if (await _userRepository.GetUserExists(registration.Username))
             {
-                throw new DuplicateNameException($"User '{user.Username}' already exists");
+                throw new DuplicateNameException($"Użytkownik '{registration.Username}' już istnieje");
             }
+
+            var user = new User
+            {
+                Password = registration.Password,
+                Username = registration.Username
+            };
             
             CreatePasswordHash(user);
 
@@ -71,27 +84,33 @@ namespace SaveWise.BusinessLogic.Services
             return _userRepository.DeleteAsync(id);
         }
 
-        public async Task ChangePassword(string username, string password, string passwordConfirm)
+        public async Task ChangePassword(ChangePassword changePassword)
         {
-            if (string.IsNullOrWhiteSpace(username)
-                || string.IsNullOrWhiteSpace(password)
-                || string.IsNullOrWhiteSpace(passwordConfirm))
+            if (string.IsNullOrWhiteSpace(changePassword.Username)
+                || string.IsNullOrWhiteSpace(changePassword.OldPassword)
+                || string.IsNullOrWhiteSpace(changePassword.NewPassword)
+                || string.IsNullOrWhiteSpace(changePassword.PasswordConfirm))
             {
-                throw new ArgumentNullException("Missing parameters", new Exception());
+                throw new ArgumentNullException("Brak wymaganych parametrów zmiany hasła", new Exception());
             }
 
-            if (!string.Equals(password, passwordConfirm))
+            if (!string.Equals(changePassword.NewPassword, changePassword.PasswordConfirm))
             {
-                throw new AuthenticationException("New password does not match confirmed value");
+                throw new AuthenticationException("Potwierdzenie hasła różni się od oryginału");
             }
 
-            var user = await _userRepository.GetByNameAsync(username);
+            var user = await _userRepository.GetByNameAsync(changePassword.Username);
             if (user == null)
             {
-                throw new AuthenticationException($"User '{username}' could not be found or more than one such users found");
+                throw new AuthenticationException($"Użytkownik '{changePassword.Username}' nie istnieje");
             }
 
-            user.Password = password;
+            if (!VerifyPasswordHash(changePassword.OldPassword, user.PasswordHash, user.PasswordSalt))
+            {
+                throw new AuthenticationException("Nieprawidłowe hasło");
+            }
+            
+            user.Password = changePassword.NewPassword;
             CreatePasswordHash(user);
 
             await _userRepository.UpdateAsync(user.Id, user);
@@ -102,7 +121,7 @@ namespace SaveWise.BusinessLogic.Services
             using (var hmac = new HMACSHA512())
             {
                 user.PasswordSalt = hmac.Key;
-                user.PasswordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(user.Password));
+                user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Password));
             }
         }
  

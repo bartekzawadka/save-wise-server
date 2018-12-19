@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SaveWise.Api.Common;
 using SaveWise.BusinessLogic.Services;
-using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Models.Users;
 
 namespace SaveWise.Api.Controllers
 {
@@ -77,7 +77,7 @@ namespace SaveWise.Api.Controllers
 
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] User user)
+        public async Task<IActionResult> Register([FromBody] Register user)
         {
             if (!ModelState.IsValid)
             {
@@ -103,15 +103,14 @@ namespace SaveWise.Api.Controllers
             }
         }
 
-        [HttpGet("changePassword")]
-        public async Task<IActionResult> ChangePassword(
-            [FromQuery] string username,
-            [FromQuery] string password,
-            [FromQuery] string passwordConfirm)
+        [HttpPut("changePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePassword changePassword)
         {
             try
             {
-                await _userService.ChangePassword(username, password, passwordConfirm);
+                GetErrorFromModelState();
+                
+                await _userService.ChangePassword(changePassword);
                 return Ok();
             }
             catch (ArgumentNullException ane)

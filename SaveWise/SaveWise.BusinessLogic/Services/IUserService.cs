@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Models.Users;
 
 namespace SaveWise.BusinessLogic.Services
 {
@@ -9,10 +10,10 @@ namespace SaveWise.BusinessLogic.Services
         
         Task<User> AuthenticateAsync(string username, string password);
 
-        Task CreateAsync(User user);
+        Task CreateAsync(Register registration);
 
         Task DeleteAsync(string id);
 
-        Task ChangePassword(string username, string password, string passwordConfirm);
+        Task ChangePassword(ChangePassword changePassword);
     }
 }
