@@ -26,7 +26,7 @@ namespace SaveWise.BusinessLogic.Services
         }
 
         public async Task<Plan> GetCurrentPlanAsync()
-        {
+        {           
             var plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {
@@ -59,6 +59,8 @@ namespace SaveWise.BusinessLogic.Services
             {
                 throw new DuplicateNameException("Już istnieje plan budżetowy dla wybranego okresu");
             }
+
+            await repo.InsertAsync(document);
         }
 
         public async Task<NewPlan> GetNewPlanAsync()

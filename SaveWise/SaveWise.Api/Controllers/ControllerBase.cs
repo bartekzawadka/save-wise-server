@@ -23,5 +23,13 @@ namespace SaveWise.Api.Controllers
             
             return new {errors = errors.ToArray()};
         }
+
+        protected object GetMessageObject(string message)
+        {
+            return new
+            {
+                error = message
+            };
+        }
     }
 }
