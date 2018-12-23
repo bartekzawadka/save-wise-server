@@ -93,7 +93,7 @@ namespace SaveWise.Api
             services.AddTransient<IRepositoryFactory, RepositoryFactory>();
             services.AddTransient<IExpenseService, ExpenseService>();
             services.AddTransient<IPlanService, PlanService>();
-            services.AddTransient<IService<ExpenseCategory>, Service<ExpenseCategory>>();
+            services.AddTransient<IExpenseCategoryService, ExpenseCategoryService>();
             services.AddTransient<IIncomeCategoryService, IncomeCategoryService>();
         }
 

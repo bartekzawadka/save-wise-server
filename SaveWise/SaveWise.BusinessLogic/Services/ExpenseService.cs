@@ -55,7 +55,7 @@ namespace SaveWise.BusinessLogic.Services
                 plan.Expenses = new List<Expense>();
             }
 
-            expense.Id = new Guid().ToString();
+            expense.Id = Guid.NewGuid().ToString();
             plan.Expenses.Add(expense);
             
             await planRepository.UpdateAsync(planId, plan);
