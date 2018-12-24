@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using SaveWise.BusinessLogic.Common;
 using SaveWise.DataLayer;
@@ -34,14 +35,6 @@ namespace SaveWise.BusinessLogic.Services
             var filter = new PlansFilter
             {
                 FilterExpression = GetCurrentPlanCondition(),
-                Sorting = new List<ColumnSort>
-                {
-                    new ColumnSort
-                    {
-                        ColumnName = nameof(Plan.PlannedIncomes),
-                        IsDescending = true
-                    }
-                },
                 PageSize = 1
             };
             var plans = await plansRepo.GetAsync(filter);
@@ -68,7 +61,7 @@ namespace SaveWise.BusinessLogic.Services
                 .ToDictionary(category => category.Name, category => category.Types);
             var expenseCategoriesNames = expenseCategories.Select(ec => ec.Name).ToList();
 
-            var plannedExpensesDict = document.PlannedExpenses.GroupBy(x => x.Category)
+            var plannedExpensesDict = document.Expenses.GroupBy(x => x.Category)
                 .ToDictionary(x => x.Key, x => x.Select(y => new ExpenseType
                 {
                     Name = y.Type
@@ -129,29 +122,21 @@ namespace SaveWise.BusinessLogic.Services
             var plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {
-                Sorting = new List<ColumnSort>
-                {
-                    new ColumnSort
-                    {
-                        ColumnName = nameof(Plan.PlannedIncomes),
-                        IsDescending = true
-                    }
-                },
                 PageSize = 1
             };
 
             var lastPlan = (await plansRepo.GetAsync(filter)).FirstOrDefault();
 
-            var incomeCategories = (lastPlan == null || lastPlan.PlannedIncomes?.Any() != true)
+            var incomeCategories = (lastPlan == null || lastPlan.Incomes?.Any() != true)
                 ? _predefinedCategories.IncomeCategories
-                : lastPlan.PlannedIncomes.Select(income => new IncomeCategory
+                : lastPlan.Incomes.Select(income => new IncomeCategory
                 {
                     Name = income.Category
                 }).ToList();
 
-            var expenseCategories = (lastPlan == null || lastPlan.PlannedExpenses?.Any() != true)
+            var expenseCategories = (lastPlan == null || lastPlan.Expenses?.Any() != true)
                 ? _predefinedCategories.ExpenseCategories
-                : lastPlan.PlannedExpenses.GroupBy(x => x.Category).Select(item =>
+                : lastPlan.Expenses.GroupBy(x => x.Category).Select(item =>
                 {
                     return new ExpenseCategory
                     {
@@ -168,6 +153,34 @@ namespace SaveWise.BusinessLogic.Services
                 IncomeCategories = incomeCategories,
                 ExpenseCategories = expenseCategories
             };
+        }
+
+        public async Task<IList<Income>> GetPlanIncomes(string planId)
+        {
+            var repo = RepositoryFactory.GetGenericRepository<Plan>();
+            var plan = await repo.GetByIdAsync(planId);
+
+            if (plan == null)
+            {
+                throw new Exception("Nie odnaleziono wskazanego budżetu w bazie danych");
+            }
+            
+            return plan.Incomes;
+        }
+
+        public async Task UpdatePlanIncomes(string planId, IList<Income> incomes)
+        {
+            var repo = RepositoryFactory.GetGenericRepository<Plan>();
+            var plan = await repo.GetByIdAsync(planId);
+
+            if (plan == null)
+            {
+                throw new Exception("Nie odnaleziono wskazanego budżetu w bazie danych");
+            }
+            
+            plan.Incomes = incomes;
+
+            await repo.UpdateAsync(planId, plan);
         }
 
         private static Expression<Func<Plan, bool>> GetCurrentPlanCondition()
