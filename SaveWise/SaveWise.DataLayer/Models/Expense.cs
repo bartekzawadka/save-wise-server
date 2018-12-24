@@ -7,11 +7,11 @@ namespace SaveWise.DataLayer.Models
     {
         public string Id { get; set; }
 
-        [Required(ErrorMessage = "Data wydatku jest wymagana")]
         public DateTime? Date { get; set; }
 
-        [Range(Double.MinValue, Double.MaxValue, ErrorMessage = "Kwota wydatku musi być większa od 0zł")]
         public float Amount { get; set; }
+        
+        public float PlannedAmount { get; set; }
 
         [Required(ErrorMessage = "Kategoria wydatku jest wymagana")]
         public string Category { get; set; }

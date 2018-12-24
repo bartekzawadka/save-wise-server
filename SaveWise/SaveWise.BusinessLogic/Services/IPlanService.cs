@@ -10,5 +10,9 @@ namespace SaveWise.BusinessLogic.Services
         Task<Plan> GetCurrentPlanAsync();
         
         Task<NewPlan> GetNewPlanAsync();
+
+        Task<IList<Income>> GetPlanIncomes(string planId);
+
+        Task UpdatePlanIncomes(string planId, IList<Income> incomes);
     }
 }

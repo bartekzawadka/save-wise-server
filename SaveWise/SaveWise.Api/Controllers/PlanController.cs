@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -42,6 +43,35 @@ namespace SaveWise.Api.Controllers
 
             var document = await _planService.GetByIdAsync(id);
             return Ok(document);
+        }
+
+        [HttpGet("{planId}/incomes")]
+        public async Task<IActionResult> GetIncomes(string planId)
+        {
+            if (string.IsNullOrWhiteSpace(planId))
+            {
+                return BadRequest(GetMessageObject("Nie podano identyfikatora budżetu"));
+            }
+
+            var incomes = await _planService.GetPlanIncomes(planId);
+            return Ok(incomes);
+        }
+
+        [HttpPut("{planId}/incomes")]
+        public async Task<IActionResult> PutIncomes(string planId, [FromBody] IList<Income> incomes)
+        {
+            if (string.IsNullOrWhiteSpace(planId))
+            {
+                return BadRequest(GetMessageObject("Nie podano identyfikatora budżetu"));
+            }
+
+            if (incomes == null)
+            {
+                return BadRequest(GetMessageObject("Otrzymano pustą listę przychodów"));
+            }
+
+            await _planService.UpdatePlanIncomes(planId, incomes);
+            return Ok();
         }
 
         [HttpGet("new")]

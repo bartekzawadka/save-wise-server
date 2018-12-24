@@ -13,11 +13,13 @@ namespace SaveWise.DataLayer.Models
         public DateTime? EndDate { get; set; }
 
         public IList<Expense> Expenses { get; set; }
-
-        [Required(ErrorMessage = "Planowane wpływy muszą zostać podane podczas planowania budżetu")]
-        public IList<Income> PlannedIncomes { get; set; }
         
-        [Required(ErrorMessage = "Planowane wydatki muszą zostać podane podczas planowania budżetu")]
-        public IList<Expense> PlannedExpenses { get; set; }
+        public IList<Income> Incomes { get; set; }
+
+//        [Required(ErrorMessage = "Planowane wpływy muszą zostać podane podczas planowania budżetu")]
+//        public IList<Income> PlannedIncomes { get; set; }
+//        
+//        [Required(ErrorMessage = "Planowane wydatki muszą zostać podane podczas planowania budżetu")]
+//        public IList<Expense> PlannedExpenses { get; set; }
     }
 }
