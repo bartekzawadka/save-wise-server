@@ -7,12 +7,14 @@ namespace SaveWise.BusinessLogic.Services
 {
     public interface IPlanService : IService<Plan>
     {
-        Task<Plan> GetCurrentPlanAsync();
+        Task<PlanSummary> GetCurrentPlanAsync();
         
         Task<NewPlan> GetNewPlanAsync();
 
         Task<IList<Income>> GetPlanIncomes(string planId);
 
         Task UpdatePlanIncomes(string planId, IList<Income> incomes);
+
+        Task<PlanSummary> GetSummary(string planId);
     }
 }

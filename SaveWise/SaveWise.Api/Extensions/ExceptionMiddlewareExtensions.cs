@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SaveWise.DataLayer.Sys.Exceptions;
 
 namespace SaveWise.Api.Extensions
 {
@@ -21,13 +22,18 @@ namespace SaveWise.Api.Extensions
                     var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
                     if (contextFeature != null)
                     {
-                        if (contextFeature.Error is UnauthorizedAccessException)
+                        switch (contextFeature.Error)
                         {
-                            context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
-                            return;
+                            case UnauthorizedAccessException _:
+                                context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                                return;
+                            case DocumentNotFoundException _:
+                                context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                                return;
+                            default:
+                                await context.Response.WriteAsync(new ErrorResult("Internal Server Error.").ToString());
+                                break;
                         }
-                        
-                        await context.Response.WriteAsync(new ErrorResult("Internal Server Error.").ToString());
                     }
                 });
             });

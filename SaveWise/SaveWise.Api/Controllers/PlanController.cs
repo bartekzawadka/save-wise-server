@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Models.Plans;
 using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.Api.Controllers
@@ -45,6 +46,13 @@ namespace SaveWise.Api.Controllers
             return Ok(document);
         }
 
+        [HttpGet("{id}/summary")]
+        public async Task<IActionResult> GetSummary(string id)
+        {
+            var summary = await _planService.GetSummary(id);
+            return Ok(summary);
+        }
+        
         [HttpGet("{planId}/incomes")]
         public async Task<IActionResult> GetIncomes(string planId)
         {
