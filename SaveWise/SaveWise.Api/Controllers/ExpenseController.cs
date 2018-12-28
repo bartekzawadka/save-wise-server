@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Models.Filters;
 using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.Api.Controllers
@@ -17,6 +18,20 @@ namespace SaveWise.Api.Controllers
         {
             _expenseService = expenseService;
             _expenseCategoryService = expenseCategoryService;
+        }
+
+        [HttpPost("list/{planId}")]
+        public async Task<IActionResult> GetExpenses(string planId, [FromBody] ExpenseFilter filter)
+        {
+            var expenses = await _expenseService.GetAsync(planId, filter);
+            return Ok(expenses);
+        }
+
+        [HttpGet("{planId}/{expenseId}")]
+        public async Task<IActionResult> GetById(string planId, string expenseId)
+        {
+            var expense = await _expenseService.GetOneAsync(planId, expenseId);
+            return Ok(expense);
         }
 
         [HttpGet("categories")]
@@ -59,6 +74,18 @@ namespace SaveWise.Api.Controllers
             }
 
             await _expenseService.InsertAsync(planId, expense);
+            return Ok();
+        }
+        
+        [HttpPut("{planId}/{expenseId}")]
+        public async Task<IActionResult> Put(string planId, string expenseId, [FromBody] Expense expense)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(GetErrorFromModelState());
+            }
+
+            await _expenseService.UpdateAsync(planId, expenseId, expense);
             return Ok();
         }
     }

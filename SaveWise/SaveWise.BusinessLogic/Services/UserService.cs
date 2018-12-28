@@ -51,7 +51,7 @@ namespace SaveWise.BusinessLogic.Services
             return user;
         }
 
-        public async Task CreateAsync(Register registration)
+        public async Task<User> CreateAsync(Register registration)
         {
             if (registration == null || string.IsNullOrWhiteSpace(registration.Username) || string.IsNullOrWhiteSpace(registration.Password))
             {
@@ -77,6 +77,7 @@ namespace SaveWise.BusinessLogic.Services
             CreatePasswordHash(user);
 
             await _userRepository.InsertAsync(user);
+            return user;
         }
 
         public Task DeleteAsync(string id)

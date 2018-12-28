@@ -10,7 +10,7 @@ namespace SaveWise.BusinessLogic.Services
         
         Task<User> AuthenticateAsync(string username, string password);
 
-        Task CreateAsync(Register registration);
+        Task<User> CreateAsync(Register registration);
 
         Task DeleteAsync(string id);
 
