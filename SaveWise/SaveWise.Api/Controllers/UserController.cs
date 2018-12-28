@@ -41,22 +41,7 @@ namespace SaveWise.Api.Controllers
             {
                 var user = await _userService.AuthenticateAsync(userData.Username, userData.Password);
                 
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_securitySettings.Value.Secret);
-                var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                    Subject = new ClaimsIdentity(new[]
-                    {
-                        new Claim(ClaimTypes.Name, user.Id)
-                    }),
-                    Expires = DateTime.UtcNow.AddDays(7),
-                    SigningCredentials = new SigningCredentials(
-                        new SymmetricSecurityKey(key),
-                        SecurityAlgorithms.HmacSha256Signature)
-                };
-
-                var token = tokenHandler.CreateToken(tokenDescriptor);
-                var tokenString = tokenHandler.WriteToken(token);
+                var tokenString = GetTokenString(user);
 
                 return Ok(new
                 {
@@ -75,6 +60,27 @@ namespace SaveWise.Api.Controllers
             }
         }
 
+        private string GetTokenString(User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_securitySettings.Value.Secret);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, user.Id)
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+            return tokenString;
+        }
+
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] Register user)
@@ -86,8 +92,15 @@ namespace SaveWise.Api.Controllers
 
             try
             {
-                await _userService.CreateAsync(user);
-                return Ok();
+                var userCreated = await _userService.CreateAsync(user);
+                var tokenString = GetTokenString(userCreated);
+
+                return Ok(new
+                {
+                    userCreated.Id,
+                    userCreated.Username,
+                    Token = tokenString
+                });
             }
             catch (ArgumentNullException ane)
             {

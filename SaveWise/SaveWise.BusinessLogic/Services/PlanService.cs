@@ -41,7 +41,7 @@ namespace SaveWise.BusinessLogic.Services
             var plans = await plansRepo.GetAsync(filter);
             var plan = plans.SingleOrDefault();
 
-            if (plan == null)
+            if (plans == null)
             {
                 throw new DocumentNotFoundException("Nie odnaleziono planu budżetowego o wskazanych kryteriach");
             }
