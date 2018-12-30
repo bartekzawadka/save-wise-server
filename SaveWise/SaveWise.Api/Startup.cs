@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -77,7 +77,6 @@ namespace SaveWise.Api
                 Configuration.GetSection("MongoConnection:ConnectionString");
             
             IConfigurationSection databaseSection = Configuration.GetSection("MongoConnection:Database");
-
             
             var predefinedCategories = Configuration.GetSection("PredefinedCategories").Get<PredefinedCategories>();
 
