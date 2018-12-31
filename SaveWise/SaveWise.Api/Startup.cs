@@ -14,6 +14,7 @@ using SaveWise.BusinessLogic.Common;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer;
 using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Models.Users;
 using SaveWise.DataLayer.Sys;
 using SaveWise.DataLayer.User;
 
@@ -35,10 +36,10 @@ namespace SaveWise.Api
                 .AddMvc()
                 .AddJsonOptions(options => options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore);
 
-            var securitySettings = Configuration.GetSection("SecuritySettings");
+            IConfigurationSection securitySettings = Configuration.GetSection("SecuritySettings");
             services.Configure<SecuritySettings>(securitySettings);
-            
-            var secret = Encoding.ASCII.GetBytes(securitySettings.Get<SecuritySettings>().Secret);
+
+            byte[] secret = Encoding.ASCII.GetBytes(securitySettings.Get<SecuritySettings>().Secret);
 
             services.AddAuthentication(auth =>
             {
@@ -52,8 +53,8 @@ namespace SaveWise.Api
                         OnTokenValidated = context =>
                         {
                             var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
-                            var userId = context.Principal.Identity.Name;
-                            var user = userService.GetById(userId);
+                            string userId = context.Principal.Identity.Name;
+                            User user = userService.GetById(userId);
                             if (user == null)
                             {
                                 context.Fail("Unauthorized");
@@ -72,16 +73,16 @@ namespace SaveWise.Api
                         ValidateAudience = false
                     };
                 });
-            
+
             IConfigurationSection connectionStringSection =
                 Configuration.GetSection("MongoConnection:ConnectionString");
-            
+
             IConfigurationSection databaseSection = Configuration.GetSection("MongoConnection:Database");
-            
+
             var predefinedCategories = Configuration.GetSection("PredefinedCategories").Get<PredefinedCategories>();
 
             services.AddSingleton(predefinedCategories);
-            
+
             services.AddSingleton<IIdentityProvider, IdentityProvider>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<ISaveWiseContext>(new SaveWiseContext(
@@ -112,7 +113,7 @@ namespace SaveWise.Api
             app.ConfigureExceptionHandler();
 
             app.UseAuthentication();
-            
+
             app.UseMvc();
         }
     }

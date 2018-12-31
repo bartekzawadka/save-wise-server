@@ -14,7 +14,7 @@ namespace SaveWise.DataLayer
             where TFilter : Filter<TCollection>, new();
 
         Task<TCollection> GetByIdAsync(string id);
-        
+
         TCollection GetById(string id);
 
         Task InsertAsync(TCollection document);

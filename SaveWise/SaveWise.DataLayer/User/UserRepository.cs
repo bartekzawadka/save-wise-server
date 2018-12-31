@@ -17,25 +17,25 @@ namespace SaveWise.DataLayer.User
         {
             return GetUserCollection().Find(user => string.Equals(user.Id, id)).SingleOrDefault();
         }
-        
+
         public async Task<Models.Users.User> GetByIdAsync(string id)
         {
-            var result = await GetUserCollection().FindAsync(user => string.Equals(user.Id, id));
+            IAsyncCursor<Models.Users.User> result = await GetUserCollection().FindAsync(user => string.Equals(user.Id, id));
             return await result.SingleOrDefaultAsync();
         }
 
         public async Task<Models.Users.User> GetByNameAsync(string username)
         {
-            var result = await GetUserCollection().FindAsync(user => string.Equals(user.Username, username));
+            IAsyncCursor<Models.Users.User> result = await GetUserCollection().FindAsync(user => string.Equals(user.Username, username));
             return await result.SingleOrDefaultAsync();
         }
 
         public async Task<bool> GetUserExists(string username)
         {
-            var users = await GetUserCollection().FindAsync(user => string.Equals(user.Username, username));
+            IAsyncCursor<Models.Users.User> users = await GetUserCollection().FindAsync(user => string.Equals(user.Username, username));
             return users?.Any() == true;
         }
-        
+
         public Task InsertAsync(Models.Users.User user)
         {
             return GetUserCollection().InsertOneAsync(user);

@@ -7,7 +7,7 @@ namespace SaveWise.BusinessLogic.Services
     public interface IUserService
     {
         User GetById(string id);
-        
+
         Task<User> AuthenticateAsync(string username, string password);
 
         Task<User> CreateAsync(Register registration);

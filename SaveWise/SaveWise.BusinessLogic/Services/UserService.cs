@@ -37,7 +37,7 @@ namespace SaveWise.BusinessLogic.Services
                 throw new AuthenticationException("Hasło jest wymagane");
             }
 
-            var user = await _userRepository.GetByNameAsync(username);
+            User user = await _userRepository.GetByNameAsync(username);
             if (user == null)
             {
                 throw new AuthenticationException("Nieprawidłowa nazwa użytkownika lub hasło");
@@ -57,7 +57,7 @@ namespace SaveWise.BusinessLogic.Services
             {
                 throw new ArgumentNullException(nameof(registration), "Brak danych do rejestracji");
             }
-            
+
             if (!string.Equals(registration.Password, registration.PasswordConfirm))
             {
                 throw new AuthenticationException("Potwierdzenie hasła różni się od oryginału");
@@ -73,7 +73,7 @@ namespace SaveWise.BusinessLogic.Services
                 Password = registration.Password,
                 Username = registration.Username
             };
-            
+
             CreatePasswordHash(user);
 
             await _userRepository.InsertAsync(user);
@@ -100,7 +100,7 @@ namespace SaveWise.BusinessLogic.Services
                 throw new AuthenticationException("Potwierdzenie hasła różni się od oryginału");
             }
 
-            var user = await _userRepository.GetByNameAsync(changePassword.Username);
+            User user = await _userRepository.GetByNameAsync(changePassword.Username);
             if (user == null)
             {
                 throw new AuthenticationException($"Użytkownik '{changePassword.Username}' nie istnieje");
@@ -110,22 +110,22 @@ namespace SaveWise.BusinessLogic.Services
             {
                 throw new AuthenticationException("Nieprawidłowe hasło");
             }
-            
+
             user.Password = changePassword.NewPassword;
             CreatePasswordHash(user);
 
             await _userRepository.UpdateAsync(user.Id, user);
         }
-        
+
         private static void CreatePasswordHash(User user)
-        { 
+        {
             using (var hmac = new HMACSHA512())
             {
                 user.PasswordSalt = hmac.Key;
                 user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Password));
             }
         }
- 
+
         private static bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
         {
             if (password == null)
@@ -147,16 +147,16 @@ namespace SaveWise.BusinessLogic.Services
             {
                 throw new ArgumentException("Invalid length of password salt (128 bytes expected).", nameof(storedHash));
             }
- 
+
             using (var hmac = new HMACSHA512(storedSalt))
             {
-                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                byte[] computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
                 if (computedHash.Where((t, i) => t != storedHash[i]).Any())
                 {
                     return false;
                 }
             }
- 
+
             return true;
         }
     }

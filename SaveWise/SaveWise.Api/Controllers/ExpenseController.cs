@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,21 +24,21 @@ namespace SaveWise.Api.Controllers
         [HttpPost("list/{planId}")]
         public async Task<IActionResult> GetExpenses(string planId, [FromBody] ExpenseFilter filter)
         {
-            var expenses = await _expenseService.GetAsync(planId, filter);
+            IDictionary<string, List<Expense>> expenses = await _expenseService.GetAsync(planId, filter);
             return Ok(expenses);
         }
 
         [HttpGet("{planId}/{expenseId}")]
         public async Task<IActionResult> GetById(string planId, string expenseId)
         {
-            var expense = await _expenseService.GetOneAsync(planId, expenseId);
+            Expense expense = await _expenseService.GetOneAsync(planId, expenseId);
             return Ok(expense);
         }
 
         [HttpGet("categories")]
         public async Task<IActionResult> GetCategories()
         {
-            var categories = await _expenseCategoryService.GetAsync<Filter<ExpenseCategory>>(null);
+            List<ExpenseCategory> categories = await _expenseCategoryService.GetAsync<Filter<ExpenseCategory>>(null);
             return Ok(categories);
         }
 
@@ -48,7 +49,7 @@ namespace SaveWise.Api.Controllers
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
+
             await _expenseCategoryService.InsertAsync(category);
             return Ok();
         }
@@ -64,7 +65,7 @@ namespace SaveWise.Api.Controllers
             await _expenseCategoryService.InsertTypeAsync(categoryId, type);
             return Ok();
         }
-        
+
         [HttpPost("{planId}")]
         public async Task<IActionResult> Post(string planId, [FromBody] Expense expense)
         {
@@ -76,7 +77,7 @@ namespace SaveWise.Api.Controllers
             await _expenseService.InsertAsync(planId, expense);
             return Ok();
         }
-        
+
         [HttpPut("{planId}/{expenseId}")]
         public async Task<IActionResult> Put(string planId, string expenseId, [FromBody] Expense expense)
         {

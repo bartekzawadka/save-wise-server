@@ -16,8 +16,8 @@ namespace SaveWise.BusinessLogic.Services
 
         public override async Task InsertAsync(ExpenseCategory document)
         {
-            var repo = RepositoryFactory.GetGenericRepository<ExpenseCategory>();
-            var categoryExists = (await repo.GetAsync(new Filter<ExpenseCategory>
+            IGenericRepository<ExpenseCategory> repo = RepositoryFactory.GetGenericRepository<ExpenseCategory>();
+            bool categoryExists = (await repo.GetAsync(new Filter<ExpenseCategory>
             {
                 FilterExpression = category => string.Equals(category.Name, document.Name)
             })).Any();
@@ -32,21 +32,21 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task InsertTypeAsync(string categoryId, ExpenseType expenseType)
         {
-            var repo = RepositoryFactory.GetGenericRepository<ExpenseCategory>();
-            var category = await repo.GetByIdAsync(categoryId);
+            IGenericRepository<ExpenseCategory> repo = RepositoryFactory.GetGenericRepository<ExpenseCategory>();
+            ExpenseCategory category = await repo.GetByIdAsync(categoryId);
             if (category == null)
             {
                 throw new Exception("Wskazana kategoria wydatków nie została odnaleziona");
             }
 
-            var types = category.Types?.ToList();
+            List<ExpenseType> types = category.Types?.ToList();
             if (types?.Any(type => string.Equals(type.Name, expenseType.Name)) != true)
             {
                 if (types == null)
                 {
                     types = new List<ExpenseType>();
                 }
-                
+
                 types.Add(expenseType);
                 category.Types = types;
                 await repo.UpdateAsync(categoryId, category);

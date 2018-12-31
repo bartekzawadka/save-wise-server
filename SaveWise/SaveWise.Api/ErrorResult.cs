@@ -16,7 +16,7 @@ namespace SaveWise.Api
                 message = _message
             };
         }
-        
+
         public override string ToString()
         {
             return ToJson().ToString();
