@@ -20,11 +20,11 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task<IDictionary<string, List<Expense>>> GetAsync(string planId, ExpenseFilter filter)
         {
-            var planRepository = _repositoryFactory.GetGenericRepository<Plan>();
-            var plan = await planRepository.GetByIdAsync(planId);
+            IGenericRepository<Plan> planRepository = _repositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await planRepository.GetByIdAsync(planId);
 
-            var expenseFilter = filter ?? new ExpenseFilter();
-            var expenses = plan.Expenses.Where(item => item.Amount > 0.0f);
+            ExpenseFilter expenseFilter = filter ?? new ExpenseFilter();
+            IEnumerable<Expense> expenses = plan.Expenses.Where(item => item.Amount > 0.0f);
             if (!string.IsNullOrWhiteSpace(expenseFilter.Category))
             {
                 expenses = expenses.Where(item => !string.IsNullOrWhiteSpace(item.Category) &&
@@ -46,9 +46,9 @@ namespace SaveWise.BusinessLogic.Services
                 .Skip(expenseFilter.PageIndex * expenseFilter.PageSize)
                 .Take(expenseFilter.PageSize);
 
-            var dict = expenses
+            Dictionary<string, List<Expense>> dict = expenses
                 .GroupBy(x => x.Category, x => x)
-                .ToDictionary(expense => expense.Key, expense => expense.ToList()); 
+                .ToDictionary(expense => expense.Key, expense => expense.ToList());
 
             return dict;
         }
@@ -59,9 +59,9 @@ namespace SaveWise.BusinessLogic.Services
             {
                 throw new DocumentNotFoundException("Brak identyfikatora budżetu i/lub identyfikatora wydatku");
             }
-            
-            var planRepository = _repositoryFactory.GetGenericRepository<Plan>();
-            var plan = await planRepository.GetByIdAsync(planId);
+
+            IGenericRepository<Plan> planRepository = _repositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await planRepository.GetByIdAsync(planId);
             return plan.Expenses?.Where(e => string.Equals(e.Id, expenseId)).SingleOrDefault();
         }
 
@@ -71,15 +71,15 @@ namespace SaveWise.BusinessLogic.Services
             {
                 throw new DocumentNotFoundException("Brak identyfikatora budżetu i/lub identyfikatora wydatku");
             }
-            
-            var planRepository = _repositoryFactory.GetGenericRepository<Plan>();
-            var plan = await planRepository.GetByIdAsync(planId);
+
+            IGenericRepository<Plan> planRepository = _repositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await planRepository.GetByIdAsync(planId);
             if (plan.Expenses == null)
             {
                 plan.Expenses = new List<Expense>();
             }
-            
-            var expenses = plan.Expenses.Where(e => !string.Equals(e.Id, expense.Id)).ToList();
+
+            List<Expense> expenses = plan.Expenses.Where(e => !string.Equals(e.Id, expense.Id)).ToList();
             expenses.Add(expense);
             plan.Expenses = expenses;
 
@@ -88,8 +88,8 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task InsertAsync(string planId, Expense expense)
         {
-            var planRepository = _repositoryFactory.GetGenericRepository<Plan>();
-            var plan = await planRepository.GetByIdAsync(planId);
+            IGenericRepository<Plan> planRepository = _repositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await planRepository.GetByIdAsync(planId);
             if (plan.Expenses == null)
             {
                 plan.Expenses = new List<Expense>();
@@ -103,14 +103,14 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task DeleteAsync(string planId, string expenseId)
         {
-            var planRepository = _repositoryFactory.GetGenericRepository<Plan>();
-            var plan = await planRepository.GetByIdAsync(planId);
+            IGenericRepository<Plan> planRepository = _repositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await planRepository.GetByIdAsync(planId);
             if (plan.Expenses == null)
             {
                 return;
             }
 
-            var expenses = plan.Expenses.Where(e => !string.Equals(e.Id, expenseId)).ToList();
+            List<Expense> expenses = plan.Expenses.Where(e => !string.Equals(e.Id, expenseId)).ToList();
             plan.Expenses = expenses;
 
             await planRepository.UpdateAsync(planId, plan);

@@ -9,7 +9,7 @@ namespace SaveWise.Api.Controllers
 {
     [Route("api/[controller]")]
     public abstract class ControllerBase : Controller
-    {       
+    {
         protected object GetErrorFromModelState()
         {
             var errors = new List<string>();
@@ -20,7 +20,7 @@ namespace SaveWise.Api.Controllers
                     errors.Add(modelError.ErrorMessage);
                 }
             }
-            
+
             return new {errors = errors.ToArray()};
         }
 

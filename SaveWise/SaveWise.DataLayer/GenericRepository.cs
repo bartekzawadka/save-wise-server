@@ -32,7 +32,7 @@ namespace SaveWise.DataLayer
                 filter = new TFilter();
             }
 
-            var query = Collection.Find(BuildFilterDefinition(filter));
+            IFindFluent<TCollection, TCollection> query = Collection.Find(BuildFilterDefinition(filter));
 
             query = query.Skip(filter.PageIndex * filter.PageSize);
             query = query.Limit(filter.PageSize);
@@ -40,7 +40,7 @@ namespace SaveWise.DataLayer
             if (filter.Sorting?.Count > 0)
             {
                 var builder = new SortDefinitionBuilder<TCollection>();
-                foreach (var columnSort in filter.Sorting)
+                foreach (ColumnSort columnSort in filter.Sorting)
                 {
                     var stringFieldDefinition = new StringFieldDefinition<TCollection>(columnSort.ColumnName);
                     Func<SortDefinition<TCollection>> sortDefinitionFunc;
@@ -62,13 +62,13 @@ namespace SaveWise.DataLayer
 
         public virtual Task<TCollection> GetByIdAsync(string id)
         {
-            var query = Collection.Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
+            IFindFluent<TCollection, TCollection> query = Collection.Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
             return query.SingleOrDefaultAsync();
         }
 
         public virtual TCollection GetById(string id)
         {
-            var query = Collection.Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
+            IFindFluent<TCollection, TCollection> query = Collection.Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
             return query.SingleOrDefault();
         }
 
@@ -80,11 +80,11 @@ namespace SaveWise.DataLayer
 
         public virtual Task InsertManyAsync(IEnumerable<TCollection> documents)
         {
-            var userId = _identityProvider.GetUserId();
-            
+            string userId = _identityProvider.GetUserId();
+
             IList<TCollection> collection = documents.ToList();
             Parallel.ForEach(collection, document => { document.UserId = userId; });
-            
+
             return Collection.InsertManyAsync(collection);
         }
 
@@ -96,13 +96,13 @@ namespace SaveWise.DataLayer
 
         public virtual async Task<bool> DeleteAsync(string id)
         {
-            var actionResult = await Collection.DeleteOneAsync(BuildFilterDefinition(f => string.Equals(f.Id, id)));
+            DeleteResult actionResult = await Collection.DeleteOneAsync(BuildFilterDefinition(f => string.Equals(f.Id, id)));
             return actionResult.IsAcknowledged && actionResult.DeletedCount > 0;
         }
 
         public virtual async Task<bool> DeleteManyAsync(IEnumerable<string> ids)
         {
-            var result = await Collection.DeleteManyAsync(BuildFilterDefinition(collection => ids.Contains(collection.Id)));
+            DeleteResult result = await Collection.DeleteManyAsync(BuildFilterDefinition(collection => ids.Contains(collection.Id)));
             return result.IsAcknowledged && result.DeletedCount > 0;
         }
 

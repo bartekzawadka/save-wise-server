@@ -7,7 +7,7 @@ namespace SaveWise.DataLayer
         public IMongoDatabase Database { get; set; }
 
         public SaveWiseContext(string connectionString, string database)
-        {           
+        {
             IMongoClient client = new MongoClient(connectionString);
             Database = client.GetDatabase(database);
         }

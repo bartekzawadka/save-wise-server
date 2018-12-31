@@ -39,9 +39,9 @@ namespace SaveWise.Api.Controllers
 
             try
             {
-                var user = await _userService.AuthenticateAsync(userData.Username, userData.Password);
-                
-                var tokenString = GetTokenString(user);
+                User user = await _userService.AuthenticateAsync(userData.Username, userData.Password);
+
+                string tokenString = GetTokenString(user);
 
                 return Ok(new
                 {
@@ -63,7 +63,7 @@ namespace SaveWise.Api.Controllers
         private string GetTokenString(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_securitySettings.Value.Secret);
+            byte[] key = Encoding.ASCII.GetBytes(_securitySettings.Value.Secret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
@@ -76,8 +76,8 @@ namespace SaveWise.Api.Controllers
                     SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+            string tokenString = tokenHandler.WriteToken(token);
             return tokenString;
         }
 
@@ -92,8 +92,8 @@ namespace SaveWise.Api.Controllers
 
             try
             {
-                var userCreated = await _userService.CreateAsync(user);
-                var tokenString = GetTokenString(userCreated);
+                User userCreated = await _userService.CreateAsync(user);
+                string tokenString = GetTokenString(userCreated);
 
                 return Ok(new
                 {
@@ -122,7 +122,7 @@ namespace SaveWise.Api.Controllers
             try
             {
                 GetErrorFromModelState();
-                
+
                 await _userService.ChangePassword(changePassword);
                 return Ok();
             }

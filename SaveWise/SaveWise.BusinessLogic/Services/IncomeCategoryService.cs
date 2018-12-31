@@ -15,12 +15,12 @@ namespace SaveWise.BusinessLogic.Services
 
         public override async Task InsertManyAsync(IEnumerable<IncomeCategory> documents)
         {
-            var repo = RepositoryFactory.GetGenericRepository<IncomeCategory>();
-            
-            var categories = await repo.GetAsync<Filter<IncomeCategory>>();
-            var categoryNames = categories.Select(c => c.Name.ToLower().Trim()).ToList();
+            IGenericRepository<IncomeCategory> repo = RepositoryFactory.GetGenericRepository<IncomeCategory>();
 
-            var missingCategories = documents.Where(c => !categoryNames.Contains(c.Name.ToLower().Trim())).ToList();
+            List<IncomeCategory> categories = await repo.GetAsync<Filter<IncomeCategory>>();
+            List<string> categoryNames = categories.Select(c => c.Name.ToLower().Trim()).ToList();
+
+            List<IncomeCategory> missingCategories = documents.Where(c => !categoryNames.Contains(c.Name.ToLower().Trim())).ToList();
 
             await repo.InsertManyAsync(missingCategories);
         }

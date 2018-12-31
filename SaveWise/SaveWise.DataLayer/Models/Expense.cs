@@ -10,7 +10,7 @@ namespace SaveWise.DataLayer.Models
         public DateTime? Date { get; set; }
 
         public float Amount { get; set; }
-        
+
         public float PlannedAmount { get; set; }
 
         [Required(ErrorMessage = "Kategoria wydatku jest wymagana")]

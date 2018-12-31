@@ -14,7 +14,7 @@ namespace SaveWise.Api.Common
         }
 
         public bool IsAuthenticated => _contextAccessor.HttpContext.User?.Identity?.IsAuthenticated == true;
-        
+
         public string GetUserId()
         {
             if (!IsAuthenticated)

@@ -24,7 +24,7 @@ namespace SaveWise.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var plans = await _planService.GetAsync<Filter<Plan>>(null);
+            List<Plan> plans = await _planService.GetAsync<Filter<Plan>>(null);
             return Ok(plans);
         }
 
@@ -42,17 +42,17 @@ namespace SaveWise.Api.Controllers
                 return BadRequest(GetErrorFromModelState());
             }
 
-            var document = await _planService.GetByIdAsync(id);
+            Plan document = await _planService.GetByIdAsync(id);
             return Ok(document);
         }
 
         [HttpGet("{id}/summary")]
         public async Task<IActionResult> GetSummary(string id)
         {
-            var summary = await _planService.GetSummary(id);
+            PlanSummary summary = await _planService.GetSummary(id);
             return Ok(summary);
         }
-        
+
         [HttpGet("{planId}/incomes")]
         public async Task<IActionResult> GetIncomes(string planId)
         {
@@ -61,7 +61,7 @@ namespace SaveWise.Api.Controllers
                 return BadRequest(GetMessageObject("Nie podano identyfikatora budżetu"));
             }
 
-            var incomes = await _planService.GetPlanIncomes(planId);
+            IList<Income> incomes = await _planService.GetPlanIncomes(planId);
             return Ok(incomes);
         }
 
@@ -90,10 +90,10 @@ namespace SaveWise.Api.Controllers
                 return BadRequest(GetErrorFromModelState());
             }
 
-            var result = await _planService.GetNewPlanAsync();
+            NewPlan result = await _planService.GetNewPlanAsync();
             return Ok(result);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Plan plan)
         {
@@ -121,7 +121,7 @@ namespace SaveWise.Api.Controllers
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
+
             await _planService.UpdateAsync(id, plan);
             return Ok(plan);
         }
@@ -133,8 +133,8 @@ namespace SaveWise.Api.Controllers
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
-            var result = await _planService.DeleteAsync(id);
+
+            bool result = await _planService.DeleteAsync(id);
             return Ok(result);
         }
     }

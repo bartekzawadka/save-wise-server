@@ -19,12 +19,12 @@ namespace SaveWise.DataLayer
 
         public IGenericRepository<T> GetGenericRepository<T>() where T : Document
         {
-            var name = Regex.Replace(typeof(T).Name, "(\\B[A-Z])", ".$1").ToLower();
-            
-            var repo = _repositoriesDictionary.GetOrAdd(
+            string name = Regex.Replace(typeof(T).Name, "(\\B[A-Z])", ".$1").ToLower();
+
+            object repo = _repositoriesDictionary.GetOrAdd(
                 name,
                 new GenericRepository<T>(_context, _identityProvider, name));
-            
+
             if (repo is IGenericRepository<T> genericRepository)
             {
                 return genericRepository;
