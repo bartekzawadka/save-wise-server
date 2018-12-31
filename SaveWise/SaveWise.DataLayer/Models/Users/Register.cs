@@ -8,10 +8,10 @@ namespace SaveWise.DataLayer.Models.Users
         public string Username { get; set; }
 
         [Required(ErrorMessage = "Hasło jest wymagane")]
-        [RegularExpression(@"(?=^.{8,}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s)[0-9a-zA-Z!@#$%^&*()]*$", 
+        [RegularExpression(@"(?=^.{8,}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s)[0-9a-zA-Z!@#$%^&*()]*$",
             ErrorMessage = "Hasło musi posiadać jedną małą i wielką literę oraz cyfrę. Hasło musi mieć minimum 8 znaków")]
         public string Password { get; set; }
-        
+
         [Required(ErrorMessage = "Potwierdzenie hasła jest wymagane")]
         public string PasswordConfirm { get; set; }
     }

@@ -5,7 +5,7 @@ namespace SaveWise.DataLayer.User
     public interface IUserRepository
     {
         Models.Users.User GetById(string id);
-        
+
         Task<Models.Users.User> GetByIdAsync(string id);
 
         Task<Models.Users.User> GetByNameAsync(string username);

@@ -14,8 +14,8 @@ namespace SaveWise.BusinessLogic.Services
         {
             RepositoryFactory = repositoryFactory;
         }
-        
-        public virtual Task<List<TDocument>> GetAsync<TFilter>(TFilter filter) 
+
+        public virtual Task<List<TDocument>> GetAsync<TFilter>(TFilter filter)
             where TFilter : Filter<TDocument>, new()
         {
             return RepositoryFactory.GetGenericRepository<TDocument>().GetAsync(filter);

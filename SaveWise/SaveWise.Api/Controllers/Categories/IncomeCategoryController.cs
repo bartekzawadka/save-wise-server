@@ -20,10 +20,10 @@ namespace SaveWise.Api.Controllers.Categories
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var categories = await _categoryService.GetAsync<Filter<IncomeCategory>>(null);
+            List<IncomeCategory> categories = await _categoryService.GetAsync<Filter<IncomeCategory>>(null);
             return Ok(categories);
         }
-        
+
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
@@ -31,8 +31,8 @@ namespace SaveWise.Api.Controllers.Categories
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
-            var value = await _categoryService.GetByIdAsync(id);
+
+            IncomeCategory value = await _categoryService.GetByIdAsync(id);
             return Ok(value);
         }
 
@@ -47,7 +47,7 @@ namespace SaveWise.Api.Controllers.Categories
             await _categoryService.InsertAsync(category);
             return Ok(category);
         }
-        
+
         [HttpPost("multiple")]
         public async Task<IActionResult> Post([FromBody] IEnumerable<IncomeCategory> category)
         {
@@ -80,7 +80,7 @@ namespace SaveWise.Api.Controllers.Categories
                 return BadRequest(GetErrorFromModelState());
             }
 
-            var result = await _categoryService.DeleteAsync(id);
+            bool result = await _categoryService.DeleteAsync(id);
             return Ok(new {result});
         }
     }

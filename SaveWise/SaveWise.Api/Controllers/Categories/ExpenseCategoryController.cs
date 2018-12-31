@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SaveWise.BusinessLogic.Services;
@@ -19,10 +20,10 @@ namespace SaveWise.Api.Controllers.Categories
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var categories = await _categoryService.GetAsync<Filter<ExpenseCategory>>(null);
+            List<ExpenseCategory> categories = await _categoryService.GetAsync<Filter<ExpenseCategory>>(null);
             return Ok(categories);
         }
-        
+
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
@@ -30,8 +31,8 @@ namespace SaveWise.Api.Controllers.Categories
             {
                 return BadRequest(GetErrorFromModelState());
             }
-            
-            var value = await _categoryService.GetByIdAsync(id);
+
+            ExpenseCategory value = await _categoryService.GetByIdAsync(id);
             return Ok(value);
         }
 
@@ -67,7 +68,7 @@ namespace SaveWise.Api.Controllers.Categories
                 return BadRequest(GetErrorFromModelState());
             }
 
-            var result = await _categoryService.DeleteAsync(id);
+            bool result = await _categoryService.DeleteAsync(id);
             return Ok(new {result});
         }
     }

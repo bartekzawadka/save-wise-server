@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 using SaveWise.BusinessLogic.Common;
 using SaveWise.DataLayer;
@@ -32,16 +31,21 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task<PlanSummary> GetCurrentPlanAsync()
         {
-            var plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
+            IGenericRepository<Plan> plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {
                 FilterExpression = GetCurrentPlanCondition(),
                 PageSize = 1
             };
-            var plans = await plansRepo.GetAsync(filter);
-            var plan = plans.SingleOrDefault();
+            List<Plan> plans = await plansRepo.GetAsync(filter);
+            if (plans == null || plans.Count == 0 || plans.Count > 1)
+            {
+                throw new DocumentNotFoundException("Nie odnaleziono planu budżetowego o wskazanych kryteriach");
+            }
 
-            if (plans == null)
+            Plan plan = plans.SingleOrDefault();
+
+            if (plan == null)
             {
                 throw new DocumentNotFoundException("Nie odnaleziono planu budżetowego o wskazanych kryteriach");
             }
@@ -51,25 +55,25 @@ namespace SaveWise.BusinessLogic.Services
 
         public override async Task InsertAsync(Plan document)
         {
-            var repo = RepositoryFactory.GetGenericRepository<Plan>();
+            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {
                 FilterExpression = plan => document.StartDate <= plan.StartDate,
                 PageSize = 1
             };
 
-            var existingCurrentPlans = await repo.GetAsync(filter);
+            List<Plan> existingCurrentPlans = await repo.GetAsync(filter);
             if (existingCurrentPlans.Any())
             {
                 throw new DuplicateNameException("Już istnieje plan budżetowy dla wybranego okresu");
             }
 
-            var expenseCategories = await _expenseCategoryService.GetAsync<Filter<ExpenseCategory>>(null);
-            var expenseCategoriesDict = expenseCategories
+            List<ExpenseCategory> expenseCategories = await _expenseCategoryService.GetAsync<Filter<ExpenseCategory>>(null);
+            Dictionary<string, IEnumerable<ExpenseType>> expenseCategoriesDict = expenseCategories
                 .ToDictionary(category => category.Name, category => category.Types);
-            var expenseCategoriesNames = expenseCategories.Select(ec => ec.Name).ToList();
+            List<string> expenseCategoriesNames = expenseCategories.Select(ec => ec.Name).ToList();
 
-            var plannedExpensesDict = document.Expenses.GroupBy(x => x.Category)
+            Dictionary<string, List<ExpenseType>> plannedExpensesDict = document.Expenses.GroupBy(x => x.Category)
                 .ToDictionary(x => x.Key, x => x.Select(y => new ExpenseType
                 {
                     Name = y.Type
@@ -77,7 +81,7 @@ namespace SaveWise.BusinessLogic.Services
 
             var newCategories = new List<ExpenseCategory>();
 
-            foreach (var plannedExpense in plannedExpensesDict)
+            foreach (KeyValuePair<string, List<ExpenseType>> plannedExpense in plannedExpensesDict)
             {
                 if (!expenseCategoriesNames.Contains(plannedExpense.Key))
                 {
@@ -89,15 +93,15 @@ namespace SaveWise.BusinessLogic.Services
                 }
                 else
                 {
-                    var existingsNames = expenseCategoriesDict[plannedExpense.Key].Select(x => x.Name).ToList();
-                    var toBeAdded = plannedExpense.Value.Where(x => !existingsNames.Contains(x.Name)).ToList();
+                    List<string> existingsNames = expenseCategoriesDict[plannedExpense.Key].Select(x => x.Name).ToList();
+                    List<ExpenseType> toBeAdded = plannedExpense.Value.Where(x => !existingsNames.Contains(x.Name)).ToList();
 
                     if (toBeAdded.Count == 0)
                     {
                         continue;
                     }
 
-                    var dbTypes = (await _expenseCategoryService.GetAsync(new Filter<ExpenseCategory>
+                    ExpenseCategory dbTypes = (await _expenseCategoryService.GetAsync(new Filter<ExpenseCategory>
                     {
                         FilterExpression = f => string.Equals(f.Name, plannedExpense.Key)
                     })).SingleOrDefault();
@@ -107,7 +111,7 @@ namespace SaveWise.BusinessLogic.Services
                         throw new DocumentNotFoundException($"Nie odnaleziono kategorii wydatków o nazwie '{plannedExpense.Key}'");
                     }
 
-                    var types = dbTypes.Types.ToList();
+                    List<ExpenseType> types = dbTypes.Types.ToList();
 
                     types.AddRange(toBeAdded);
 
@@ -127,22 +131,22 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task<NewPlan> GetNewPlanAsync()
         {
-            var plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
+            IGenericRepository<Plan> plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {
                 PageSize = 1
             };
 
-            var lastPlan = (await plansRepo.GetAsync(filter)).FirstOrDefault();
+            Plan lastPlan = (await plansRepo.GetAsync(filter)).FirstOrDefault();
 
-            var incomeCategories = (lastPlan == null || lastPlan.Incomes?.Any() != true)
+            IEnumerable<IncomeCategory> incomeCategories = (lastPlan == null || lastPlan.Incomes?.Any() != true)
                 ? _predefinedCategories.IncomeCategories
                 : lastPlan.Incomes.Select(income => new IncomeCategory
                 {
                     Name = income.Category
                 }).ToList();
 
-            var expenseCategories = (lastPlan == null || lastPlan.Expenses?.Any() != true)
+            IEnumerable<ExpenseCategory> expenseCategories = (lastPlan == null || lastPlan.Expenses?.Any() != true)
                 ? _predefinedCategories.ExpenseCategories
                 : lastPlan.Expenses.GroupBy(x => x.Category).Select(item =>
                 {
@@ -165,14 +169,14 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task<IList<Income>> GetPlanIncomes(string planId)
         {
-            var repo = RepositoryFactory.GetGenericRepository<Plan>();
-            var plan = await repo.GetByIdAsync(planId);
+            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await repo.GetByIdAsync(planId);
 
             if (plan == null)
             {
                 throw new DocumentNotFoundException("Nie odnaleziono wskazanego budżetu w bazie danych");
             }
-            
+
             return plan.Incomes;
         }
 
@@ -184,7 +188,7 @@ namespace SaveWise.BusinessLogic.Services
                 await repo.UpdateAsync(planId, plan);
             });
         }
-        
+
         public async Task<PlanSummary> GetSummary(string planId)
         {
             return await ExecuteWithPlan(planId, async (plan, repository) =>
@@ -215,11 +219,11 @@ namespace SaveWise.BusinessLogic.Services
                 });
             });
         }
-        
+
         private async Task ExecuteWithPlan(string planId, Func<Plan, IGenericRepository<Plan>, Task> func)
         {
-            var repo = RepositoryFactory.GetGenericRepository<Plan>();
-            var plan = await repo.GetByIdAsync(planId);
+            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await repo.GetByIdAsync(planId);
 
             if (plan == null)
             {
@@ -231,8 +235,8 @@ namespace SaveWise.BusinessLogic.Services
 
         private async Task<T> ExecuteWithPlan<T>(string planId, Func<Plan, IGenericRepository<Plan>, Task<T>> func)
         {
-            var repo = RepositoryFactory.GetGenericRepository<Plan>();
-            var plan = await repo.GetByIdAsync(planId);
+            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
+            Plan plan = await repo.GetByIdAsync(planId);
 
             if (plan == null)
             {
@@ -241,11 +245,11 @@ namespace SaveWise.BusinessLogic.Services
 
             return await func(plan, repo);
         }
-        
+
         private static Expression<Func<Plan, bool>> GetCurrentPlanCondition()
         {
-            var now = DateTime.Today;
-            return plan => plan.StartDate <= now && plan.EndDate > now;
+            DateTime now = DateTime.Today;
+            return plan => plan.StartDate <= now && plan.EndDate >= now;
         }
     }
 }

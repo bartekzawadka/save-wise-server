@@ -8,7 +8,7 @@ namespace SaveWise.DataLayer.Models
         public string Category { get; set; }
 
         public float Amount { get; set; }
-        
+
         public float PlannedAmount { get; set; }
     }
 }
