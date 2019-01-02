@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -12,16 +9,16 @@ namespace SaveWise.Api.Controllers
     {
         protected object GetErrorFromModelState()
         {
-            var errors = new List<string>();
+            var error = new List<string>();
             foreach (ModelStateEntry modelStateValue in ModelState.Values)
             {
                 foreach (ModelError modelError in modelStateValue.Errors)
                 {
-                    errors.Add(modelError.ErrorMessage);
+                    error.Add(modelError.ErrorMessage);
                 }
             }
 
-            return new {errors = errors.ToArray()};
+            return new {error = error.ToArray()};
         }
 
         protected object GetMessageObject(string message)
