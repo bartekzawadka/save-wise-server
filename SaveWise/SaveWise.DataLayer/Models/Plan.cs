@@ -15,11 +15,5 @@ namespace SaveWise.DataLayer.Models
         public IList<Expense> Expenses { get; set; }
 
         public IList<Income> Incomes { get; set; }
-
-//        [Required(ErrorMessage = "Planowane wpływy muszą zostać podane podczas planowania budżetu")]
-//        public IList<Income> PlannedIncomes { get; set; }
-//        
-//        [Required(ErrorMessage = "Planowane wydatki muszą zostać podane podczas planowania budżetu")]
-//        public IList<Expense> PlannedExpenses { get; set; }
     }
 }
