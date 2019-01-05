@@ -38,6 +38,11 @@ namespace SaveWise.BusinessLogic.Services
 
         public virtual Task UpdateAsync(string id, TDocument document)
         {
+            if (string.IsNullOrWhiteSpace(document.Id))
+            {
+                document.Id = id;
+            }
+
             return RepositoryFactory.GetGenericRepository<TDocument>().UpdateAsync(id, document);
         }
 

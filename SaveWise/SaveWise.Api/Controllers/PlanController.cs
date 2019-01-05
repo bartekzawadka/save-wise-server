@@ -31,7 +31,7 @@ namespace SaveWise.Api.Controllers
         [HttpGet("current")]
         public async Task<IActionResult> GetCurrent()
         {
-            return Ok(await _planService.GetCurrentPlanAsync());
+            return Ok(await _planService.GetCurrentPlanSummaryAsync());
         }
 
         [HttpGet("{id}")]
@@ -90,7 +90,7 @@ namespace SaveWise.Api.Controllers
                 return BadRequest(GetErrorFromModelState());
             }
 
-            NewPlan result = await _planService.GetNewPlanAsync();
+            Plan result = await _planService.GetNewPlanAsync();
             return Ok(result);
         }
 

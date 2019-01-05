@@ -12,15 +12,22 @@ namespace SaveWise.BusinessLogic.Services
         public IncomeCategoryService(IRepositoryFactory repositoryFactory) : base(repositoryFactory)
         {
         }
-
+        
         public override async Task InsertManyAsync(IEnumerable<IncomeCategory> documents)
         {
+            if (documents == null)
+            {
+                return;
+            }
+            
             IGenericRepository<IncomeCategory> repo = RepositoryFactory.GetGenericRepository<IncomeCategory>();
 
             List<IncomeCategory> categories = await repo.GetAsync<Filter<IncomeCategory>>();
             List<string> categoryNames = categories.Select(c => c.Name.ToLower().Trim()).ToList();
 
-            List<IncomeCategory> missingCategories = documents.Where(c => !categoryNames.Contains(c.Name.ToLower().Trim())).ToList();
+            List<IncomeCategory> missingCategories = documents
+                .Where(c => !categoryNames.Contains(c.Name.ToLower().Trim()))
+                .ToList();
 
             await repo.InsertManyAsync(missingCategories);
         }
