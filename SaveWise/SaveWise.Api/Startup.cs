@@ -90,7 +90,7 @@ namespace SaveWise.Api
                 databaseSection.Value));
             services.AddScoped<IUserService, UserService>();
             services.AddTransient<IUserRepository, UserRepository>();
-            services.AddTransient<IRepositoryFactory, RepositoryFactory>();
+            services.AddSingleton<IRepositoryFactory, RepositoryFactory>();
             services.AddTransient<IExpenseService, ExpenseService>();
             services.AddTransient<IPlanService, PlanService>();
             services.AddTransient<IExpenseCategoryService, ExpenseCategoryService>();
