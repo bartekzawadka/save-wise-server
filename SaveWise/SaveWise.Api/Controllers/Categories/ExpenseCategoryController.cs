@@ -10,9 +10,9 @@ namespace SaveWise.Api.Controllers.Categories
     [Route("api/category/expense")]
     public class ExpenseCategoryController : ControllerBase
     {
-        private readonly IService<ExpenseCategory> _categoryService;
+        private readonly IExpenseCategoryService _categoryService;
 
-        public ExpenseCategoryController(IService<ExpenseCategory> categoryService)
+        public ExpenseCategoryController(IExpenseCategoryService categoryService)
         {
             _categoryService = categoryService;
         }
