@@ -103,6 +103,16 @@ namespace SaveWise.BusinessLogic.Services
 
         public async Task DeleteAsync(string planId, string expenseId)
         {
+            if (string.IsNullOrWhiteSpace(planId))
+            {
+                throw new ArgumentException("Nie wskazano planu, którego dotyczy wydatek");
+            }
+
+            if (string.IsNullOrWhiteSpace(expenseId))
+            {
+                throw new ArgumentException("Brak identyfikatora wydatku");
+            }
+            
             IGenericRepository<Plan> planRepository = _repositoryFactory.GetGenericRepository<Plan>();
             Plan plan = await planRepository.GetByIdAsync(planId);
             if (plan.Expenses == null)

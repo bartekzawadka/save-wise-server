@@ -27,6 +27,9 @@ namespace SaveWise.Api.Extensions
                             case UnauthorizedAccessException _:
                                 context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                                 return;
+                            case ArgumentException _:
+                                context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                                return;
                             case DocumentNotFoundException _:
                                 context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
                                 return;
