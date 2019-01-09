@@ -29,7 +29,10 @@ namespace SaveWise.BusinessLogic.Services
                 .Where(c => !categoryNames.Contains(c.Name.ToLower().Trim()))
                 .ToList();
 
-            await repo.InsertManyAsync(missingCategories);
+            if (missingCategories.Count > 0)
+            {
+                await repo.InsertManyAsync(missingCategories);
+            }
         }
     }
 }

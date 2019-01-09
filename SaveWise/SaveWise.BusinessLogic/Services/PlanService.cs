@@ -9,7 +9,6 @@ using SaveWise.DataLayer;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Models.Filters;
 using SaveWise.DataLayer.Models.Plans;
-using SaveWise.DataLayer.Sys;
 using SaveWise.DataLayer.Sys.Exceptions;
 
 namespace SaveWise.BusinessLogic.Services
