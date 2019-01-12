@@ -111,14 +111,17 @@ namespace SaveWise.BusinessLogic.Services
                 Name = x.Category
             }));
 
-            IEnumerable<ExpenseCategory> expenseCategories = document.Expenses?.GroupBy(x => x.Category).Select(y => new ExpenseCategory
-            {
-                Name = y.Key,
-                Types = y.Select(t => new ExpenseType
+            IEnumerable<ExpenseCategory> expenseCategories = document
+                .Expenses?
+                .GroupBy(x => x.Category)
+                .Select(y => new ExpenseCategory
                 {
-                    Name = t.Type
-                }).ToList()
-            });
+                    Name = y.Key,
+                    Types = y.Select(t => new ExpenseType
+                    {
+                        Name = t.Type
+                    }).ToList()
+                });
 
             await _expenseCategoryService.InsertManyAsync(expenseCategories);
 
