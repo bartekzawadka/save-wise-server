@@ -12,10 +12,12 @@ namespace SaveWise.BusinessLogic.Services
     public class ExpenseService : IExpenseService
     {
         private readonly IRepositoryFactory _repositoryFactory;
+        private readonly IPlanService _planService;
 
-        public ExpenseService(IRepositoryFactory repositoryFactory)
+        public ExpenseService(IRepositoryFactory repositoryFactory, IPlanService planService)
         {
             _repositoryFactory = repositoryFactory;
+            _planService = planService;
         }
 
         public async Task<IDictionary<string, List<Expense>>> GetAsync(string planId, ExpenseFilter filter)
@@ -83,7 +85,7 @@ namespace SaveWise.BusinessLogic.Services
             expenses.Add(expense);
             plan.Expenses = expenses;
 
-            await planRepository.UpdateAsync(planId, plan);
+            await _planService.UpdateAsync(planId, plan);
         }
 
         public async Task InsertAsync(string planId, Expense expense)
@@ -98,11 +100,21 @@ namespace SaveWise.BusinessLogic.Services
             expense.Id = Guid.NewGuid().ToString();
             plan.Expenses.Add(expense);
 
-            await planRepository.UpdateAsync(planId, plan);
+            await _planService.UpdateAsync(planId, plan);
         }
 
         public async Task DeleteAsync(string planId, string expenseId)
         {
+            if (string.IsNullOrWhiteSpace(planId))
+            {
+                throw new ArgumentException("Nie wskazano planu, którego dotyczy wydatek");
+            }
+
+            if (string.IsNullOrWhiteSpace(expenseId))
+            {
+                throw new ArgumentException("Brak identyfikatora wydatku");
+            }
+            
             IGenericRepository<Plan> planRepository = _repositoryFactory.GetGenericRepository<Plan>();
             Plan plan = await planRepository.GetByIdAsync(planId);
             if (plan.Expenses == null)
@@ -113,7 +125,7 @@ namespace SaveWise.BusinessLogic.Services
             List<Expense> expenses = plan.Expenses.Where(e => !string.Equals(e.Id, expenseId)).ToList();
             plan.Expenses = expenses;
 
-            await planRepository.UpdateAsync(planId, plan);
+            await _planService.UpdateAsync(planId, plan);
         }
     }
 }

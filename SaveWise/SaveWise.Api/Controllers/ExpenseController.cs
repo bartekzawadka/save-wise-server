@@ -89,5 +89,12 @@ namespace SaveWise.Api.Controllers
             await _expenseService.UpdateAsync(planId, expenseId, expense);
             return Ok();
         }
+
+        [HttpDelete("{planId}/{expenseId}")]
+        public async Task<IActionResult> Delete(string planId, string expenseId)
+        {
+            await _expenseService.DeleteAsync(planId, expenseId);
+            return Ok();
+        }
     }
 }

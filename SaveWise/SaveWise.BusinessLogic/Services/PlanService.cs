@@ -9,7 +9,6 @@ using SaveWise.DataLayer;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Models.Filters;
 using SaveWise.DataLayer.Models.Plans;
-using SaveWise.DataLayer.Sys;
 using SaveWise.DataLayer.Sys.Exceptions;
 
 namespace SaveWise.BusinessLogic.Services
@@ -18,18 +17,21 @@ namespace SaveWise.BusinessLogic.Services
     {
         private readonly PredefinedCategories _predefinedCategories;
         private readonly IExpenseCategoryService _expenseCategoryService;
+        private readonly IIncomeCategoryService _incomeCategoryService;
 
         public PlanService(
             IRepositoryFactory repositoryFactory,
             PredefinedCategories predefinedCategories,
-            IExpenseCategoryService expenseCategoryService)
+            IExpenseCategoryService expenseCategoryService,
+            IIncomeCategoryService incomeCategoryService)
             : base(repositoryFactory)
         {
             _predefinedCategories = predefinedCategories;
             _expenseCategoryService = expenseCategoryService;
+            _incomeCategoryService = incomeCategoryService;
         }
 
-        public async Task<PlanSummary> GetCurrentPlanAsync()
+        public async Task<PlanSummary> GetCurrentPlanSummaryAsync()
         {
             IGenericRepository<Plan> plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
@@ -53,6 +55,42 @@ namespace SaveWise.BusinessLogic.Services
             return await GetSummary(plan.Id);
         }
 
+        public override async Task<Plan> GetByIdAsync(string id)
+        {
+            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
+            var plan = await repo.GetByIdAsync(id);
+            if (plan == null)
+            {
+                throw new DocumentNotFoundException("Nie odnaleziono planu budżetowego o wskazanych kryteriach");
+            }
+
+            return plan;
+        }
+
+        public override async Task UpdateAsync(string id, Plan document)
+        {
+            await _incomeCategoryService.InsertManyAsync(document.Incomes?.Select(x => new IncomeCategory
+            {
+                Name = x.Category
+            }));
+
+            IEnumerable<ExpenseCategory> expenseCategories = document
+                .Expenses?
+                .GroupBy(x => x.Category)
+                .Select(y => new ExpenseCategory
+            {
+                Name = y.Key,
+                Types = y.Select(t => new ExpenseType
+                {
+                    Name = t.Type
+                }).ToList()
+            });
+
+            await _expenseCategoryService.InsertManyAsync(expenseCategories);
+
+            await base.UpdateAsync(id, document);
+        }
+
         public override async Task InsertAsync(Plan document)
         {
             IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
@@ -68,68 +106,29 @@ namespace SaveWise.BusinessLogic.Services
                 throw new DuplicateNameException("Już istnieje plan budżetowy dla wybranego okresu");
             }
 
-            List<ExpenseCategory> expenseCategories = await _expenseCategoryService.GetAsync<Filter<ExpenseCategory>>(null);
-            Dictionary<string, IEnumerable<ExpenseType>> expenseCategoriesDict = expenseCategories
-                .ToDictionary(category => category.Name, category => category.Types);
-            List<string> expenseCategoriesNames = expenseCategories.Select(ec => ec.Name).ToList();
-
-            Dictionary<string, List<ExpenseType>> plannedExpensesDict = document.Expenses.GroupBy(x => x.Category)
-                .ToDictionary(x => x.Key, x => x.Select(y => new ExpenseType
-                {
-                    Name = y.Type
-                }).ToList());
-
-            var newCategories = new List<ExpenseCategory>();
-
-            foreach (KeyValuePair<string, List<ExpenseType>> plannedExpense in plannedExpensesDict)
+            await _incomeCategoryService.InsertManyAsync(document.Incomes?.Select(x => new IncomeCategory
             {
-                if (!expenseCategoriesNames.Contains(plannedExpense.Key))
+                Name = x.Category
+            }));
+
+            IEnumerable<ExpenseCategory> expenseCategories = document
+                .Expenses?
+                .GroupBy(x => x.Category)
+                .Select(y => new ExpenseCategory
                 {
-                    newCategories.Add(new ExpenseCategory
+                    Name = y.Key,
+                    Types = y.Select(t => new ExpenseType
                     {
-                        Name = plannedExpense.Key,
-                        Types = plannedExpense.Value
-                    });
-                }
-                else
-                {
-                    List<string> existingsNames = expenseCategoriesDict[plannedExpense.Key].Select(x => x.Name).ToList();
-                    List<ExpenseType> toBeAdded = plannedExpense.Value.Where(x => !existingsNames.Contains(x.Name)).ToList();
+                        Name = t.Type
+                    }).ToList()
+                });
 
-                    if (toBeAdded.Count == 0)
-                    {
-                        continue;
-                    }
-
-                    ExpenseCategory dbTypes = (await _expenseCategoryService.GetAsync(new Filter<ExpenseCategory>
-                    {
-                        FilterExpression = f => string.Equals(f.Name, plannedExpense.Key)
-                    })).SingleOrDefault();
-
-                    if (dbTypes == null)
-                    {
-                        throw new DocumentNotFoundException($"Nie odnaleziono kategorii wydatków o nazwie '{plannedExpense.Key}'");
-                    }
-
-                    List<ExpenseType> types = dbTypes.Types.ToList();
-
-                    types.AddRange(toBeAdded);
-
-                    dbTypes.Types = types;
-
-                    await _expenseCategoryService.UpdateAsync(dbTypes.Id, dbTypes);
-                }
-            }
-
-            if (newCategories.Count > 0)
-            {
-                await _expenseCategoryService.InsertManyAsync(newCategories);
-            }
+            await _expenseCategoryService.InsertManyAsync(expenseCategories);
 
             await repo.InsertAsync(document);
         }
 
-        public async Task<NewPlan> GetNewPlanAsync()
+        public async Task<Plan> GetNewPlanAsync()
         {
             IGenericRepository<Plan> plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
@@ -139,32 +138,46 @@ namespace SaveWise.BusinessLogic.Services
 
             Plan lastPlan = (await plansRepo.GetAsync(filter)).FirstOrDefault();
 
-            IEnumerable<IncomeCategory> incomeCategories = (lastPlan == null || lastPlan.Incomes?.Any() != true)
-                ? _predefinedCategories.IncomeCategories
-                : lastPlan.Incomes.Select(income => new IncomeCategory
-                {
-                    Name = income.Category
-                }).ToList();
+            var plan = new Plan();
+            var now = DateTime.Now;
+            plan.StartDate = new DateTime(now.Year, now.Month, 1);
+            plan.EndDate = new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month));
 
-            IEnumerable<ExpenseCategory> expenseCategories = (lastPlan == null || lastPlan.Expenses?.Any() != true)
-                ? _predefinedCategories.ExpenseCategories
-                : lastPlan.Expenses.GroupBy(x => x.Category).Select(item =>
-                {
-                    return new ExpenseCategory
-                    {
-                        Name = item.Key,
-                        Types = item.Select(x => new ExpenseType
-                        {
-                            Name = x.Type
-                        })
-                    };
-                });
-
-            return new NewPlan
+            if (lastPlan?.Incomes != null)
             {
-                IncomeCategories = incomeCategories,
-                ExpenseCategories = expenseCategories
-            };
+                plan.Incomes = lastPlan.Incomes.Select(item => new Income
+                {
+                    Category = item.Category,
+                }).ToList();
+            }
+            else
+            {
+                plan.Incomes = _predefinedCategories.IncomeCategories.Select(x => new Income
+                {
+                    Category = x.Name
+                }).ToList();
+            }
+
+            if (lastPlan?.Expenses != null)
+            {
+                plan.Expenses = lastPlan.Expenses.Select(x => new Expense
+                {
+                    Type = x.Type,
+                    Category = x.Category
+                }).ToList();
+            }
+            else
+            {
+                plan.Expenses = (from expenseCategory in _predefinedCategories.ExpenseCategories
+                    from expenseCategoryType in expenseCategory.Types
+                    select new Expense
+                    {
+                        Type = expenseCategoryType.Name,
+                        Category = expenseCategory.Name
+                    }).ToList();
+            }
+
+            return plan;
         }
 
         public async Task<IList<Income>> GetPlanIncomes(string planId)
