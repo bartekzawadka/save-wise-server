@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Models.Filters;
-using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.Api.Controllers
 {
@@ -33,37 +32,6 @@ namespace SaveWise.Api.Controllers
         {
             Expense expense = await _expenseService.GetOneAsync(planId, expenseId);
             return Ok(expense);
-        }
-
-        [HttpGet("categories")]
-        public async Task<IActionResult> GetCategories()
-        {
-            List<ExpenseCategory> categories = await _expenseCategoryService.GetAsync<Filter<ExpenseCategory>>(null);
-            return Ok(categories);
-        }
-
-        [HttpPost("categories/add")]
-        public async Task<IActionResult> PostCategory([FromBody] ExpenseCategory category)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(GetErrorFromModelState());
-            }
-
-            await _expenseCategoryService.InsertAsync(category);
-            return Ok();
-        }
-
-        [HttpPost("categories/{categoryId}/type")]
-        public async Task<IActionResult> PostCategoryType(string categoryId, [FromBody] ExpenseType type)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(GetErrorFromModelState());
-            }
-
-            await _expenseCategoryService.InsertTypeAsync(categoryId, type);
-            return Ok();
         }
 
         [HttpPost("{planId}")]
