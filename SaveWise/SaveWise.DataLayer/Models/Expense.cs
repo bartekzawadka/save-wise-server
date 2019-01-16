@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SaveWise.DataLayer.Models
 {
-    public class Expense
+    public class Expense : SubDocument
     {
-        public string Id { get; set; }
-
         public DateTime? Date { get; set; }
 
         public float Amount { get; set; }

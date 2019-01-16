@@ -62,13 +62,15 @@ namespace SaveWise.DataLayer
 
         public virtual Task<TCollection> GetByIdAsync(string id)
         {
-            IFindFluent<TCollection, TCollection> query = Collection.Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
+            IFindFluent<TCollection, TCollection> query = Collection
+                .Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
             return query.SingleOrDefaultAsync();
         }
 
         public virtual TCollection GetById(string id)
         {
-            IFindFluent<TCollection, TCollection> query = Collection.Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
+            IFindFluent<TCollection, TCollection> query = Collection
+                .Find(BuildFilterDefinition(f => string.Equals(f.Id, id)));
             return query.SingleOrDefault();
         }
 
