@@ -87,6 +87,9 @@ namespace SaveWise.BusinessLogic.Services
             });
 
             await _expenseCategoryService.InsertManyAsync(expenseCategories);
+            
+            AssignSubDocId(document.Incomes);
+            AssignSubDocId(document.Expenses);
 
             await base.UpdateAsync(id, document);
         }
@@ -124,6 +127,9 @@ namespace SaveWise.BusinessLogic.Services
                 });
 
             await _expenseCategoryService.InsertManyAsync(expenseCategories);
+
+            AssignSubDocId(document.Incomes);
+            AssignSubDocId(document.Expenses);
 
             await repo.InsertAsync(document);
         }
@@ -263,6 +269,22 @@ namespace SaveWise.BusinessLogic.Services
         {
             DateTime now = DateTime.Today;
             return plan => plan.StartDate <= now && plan.EndDate >= now;
+        }
+
+        private void AssignSubDocId<T>(IEnumerable<T> items) where T : SubDocument
+        {
+            if (items == null)
+            {
+                return;
+            }
+            
+            foreach (var item in items)
+            {
+                if (string.IsNullOrWhiteSpace(item.Id))
+                {
+                    item.Id = Guid.NewGuid().ToString();
+                }
+            }
         }
     }
 }
