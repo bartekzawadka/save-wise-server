@@ -4,8 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MongoDB.Driver;
-using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Sys;
+using Document = SaveWise.DataLayer.Models.Document;
 
 namespace SaveWise.DataLayer
 {
@@ -27,13 +27,21 @@ namespace SaveWise.DataLayer
         public virtual Task<List<TCollection>> GetAsync<TFilter>(TFilter filter = null)
             where TFilter : Filter<TCollection>, new()
         {
+            return GetAsAsync(item => item, filter);
+        }
+        
+        public virtual Task<List<TNew>> GetAsAsync<TFilter, TNew>(
+            Expression<Func<TCollection, TNew>> selectClause,
+            TFilter filter = null)
+            where TFilter : Filter<TCollection>, new()
+        {
             if (filter == null)
             {
                 filter = new TFilter();
             }
-
+            
             IFindFluent<TCollection, TCollection> query = Collection.Find(BuildFilterDefinition(filter));
-
+            
             query = query.Skip(filter.PageIndex * filter.PageSize);
             query = query.Limit(filter.PageSize);
 
@@ -57,7 +65,7 @@ namespace SaveWise.DataLayer
                 }
             }
 
-            return query.ToListAsync();
+            return query.Project(selectClause).ToListAsync();
         }
 
         public virtual Task<TCollection> GetByIdAsync(string id)
@@ -111,10 +119,16 @@ namespace SaveWise.DataLayer
         private FilterDefinition<TCollection> BuildFilterDefinition<TFilter>(TFilter filter)
             where TFilter : Filter<TCollection>, new()
         {
-            return new FilterDefinitionBuilder<TCollection>().And(
-                filter.FilterExpression,
-                new ExpressionFilterDefinition<TCollection>(collection =>
-                    string.Equals(collection.UserId, _identityProvider.GetUserId())));
+            var filters = filter.FilterExpressions ?? new List<Expression<Func<TCollection, bool>>>();
+            if (filters.Count == 0)
+            {
+                filters.Add(t => true);
+            }
+
+            filters.Add(collection => string.Equals(collection.UserId, _identityProvider.GetUserId()));
+            
+            return new FilterDefinitionBuilder<TCollection>()
+                .And(filters.Select(t=>new ExpressionFilterDefinition<TCollection>(t)));
         }
 
         private FilterDefinition<TCollection> BuildFilterDefinition(Expression<Func<TCollection, bool>> expression)

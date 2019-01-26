@@ -18,5 +18,7 @@ namespace SaveWise.DataLayer.Models.Plans
         public IList<SumPerCategory> ExpensesPerCategory { get; set; }
 
         public IList<SumPerCategory> IncomesPerCategory { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }
