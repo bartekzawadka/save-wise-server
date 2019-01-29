@@ -3,11 +3,10 @@ using System.Data;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer.Models;
+using SaveWise.DataLayer.Models.Filters;
 using SaveWise.DataLayer.Models.Plans;
-using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.Api.Controllers
 {
@@ -21,10 +20,10 @@ namespace SaveWise.Api.Controllers
             _planService = planService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        [HttpPost("list")]
+        public async Task<IActionResult> Get([FromBody] PlansFilter filter)
         {
-            List<Plan> plans = await _planService.GetAsync<Filter<Plan>>(null);
+            IList<PlanListItem> plans = await _planService.GetAsync(filter);
             return Ok(plans);
         }
 
@@ -49,7 +48,7 @@ namespace SaveWise.Api.Controllers
         [HttpGet("{id}/summary")]
         public async Task<IActionResult> GetSummary(string id)
         {
-            PlanSummary summary = await _planService.GetSummary(id);
+            PlanSummary summary = await _planService.GetSummaryAsync(id);
             return Ok(summary);
         }
 
@@ -61,7 +60,7 @@ namespace SaveWise.Api.Controllers
                 return BadRequest(GetMessageObject("Nie podano identyfikatora budżetu"));
             }
 
-            IList<Income> incomes = await _planService.GetPlanIncomes(planId);
+            IList<Income> incomes = await _planService.GetPlanIncomesAsync(planId);
             return Ok(incomes);
         }
 
@@ -78,7 +77,7 @@ namespace SaveWise.Api.Controllers
                 return BadRequest(GetMessageObject("Otrzymano pustą listę przychodów"));
             }
 
-            await _planService.UpdatePlanIncomes(planId, incomes);
+            await _planService.UpdatePlanIncomesAsync(planId, incomes);
             return Ok();
         }
 

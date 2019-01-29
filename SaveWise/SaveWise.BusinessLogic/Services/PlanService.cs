@@ -31,15 +31,57 @@ namespace SaveWise.BusinessLogic.Services
             _incomeCategoryService = incomeCategoryService;
         }
 
+        public async Task<IList<PlanListItem>> GetAsync(PlansFilter filter)
+        {
+            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
+
+            var currentPlanFilter = new PlansFilter
+            {
+                PageSize = 1
+            };
+            currentPlanFilter.SetFilters(GetCurrentPlanCondition());
+
+            string currentPlanId = (await repo.GetAsAsync(plan => plan.Id, currentPlanFilter))
+                .FirstOrDefault();
+
+            var searchFilter = filter ?? new PlansFilter();
+            var filterExpressions = new List<Expression<Func<Plan, bool>>>();
+
+            if (searchFilter.DateTo != null)
+            {
+                filterExpressions.Add(plan => plan.EndDate == null || plan.EndDate <= searchFilter.DateTo);
+            }
+
+            if (searchFilter.DateFrom != null)
+            {
+                filterExpressions.Add(plan => plan.StartDate == null || plan.StartDate >= searchFilter.DateFrom);
+            }
+
+            searchFilter.SetFilters(filterExpressions.ToArray());
+
+            Expression<Func<Plan, PlanListItem>> planSummaryMapExpression = plan => new PlanListItem
+            {
+                Id = plan.Id,
+                StartDate = plan.StartDate,
+                EndDate = plan.EndDate,
+                IncomesSum = plan.Incomes.Sum(income => income.Amount),
+                ExpensesSum = plan.Expenses.Sum(expense => expense.Amount),
+                IsActive = plan.Id == currentPlanId
+            };
+
+            return await repo.GetAsAsync(planSummaryMapExpression, searchFilter);
+        }
+
         public async Task<PlanSummary> GetCurrentPlanSummaryAsync()
         {
             IGenericRepository<Plan> plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {
-                FilterExpression = GetCurrentPlanCondition(),
                 PageSize = 1
             };
-            List<Plan> plans = await plansRepo.GetAsync(filter);
+            filter.SetFilters(GetCurrentPlanCondition());
+
+            IList<Plan> plans = await plansRepo.GetAsync(filter);
             if (plans == null || plans.Count == 0 || plans.Count > 1)
             {
                 throw new DocumentNotFoundException("Nie odnaleziono planu budżetowego o wskazanych kryteriach");
@@ -52,7 +94,7 @@ namespace SaveWise.BusinessLogic.Services
                 throw new DocumentNotFoundException("Nie odnaleziono planu budżetowego o wskazanych kryteriach");
             }
 
-            return await GetSummary(plan.Id);
+            return await GetSummaryAsync(plan.Id);
         }
 
         public override async Task<Plan> GetByIdAsync(string id)
@@ -78,16 +120,16 @@ namespace SaveWise.BusinessLogic.Services
                 .Expenses?
                 .GroupBy(x => x.Category)
                 .Select(y => new ExpenseCategory
-            {
-                Name = y.Key,
-                Types = y.Select(t => new ExpenseType
                 {
-                    Name = t.Type
-                }).ToList()
-            });
+                    Name = y.Key,
+                    Types = y.Select(t => new ExpenseType
+                    {
+                        Name = t.Type
+                    }).ToList()
+                });
 
             await _expenseCategoryService.InsertManyAsync(expenseCategories);
-            
+
             AssignSubDocId(document.Incomes);
             AssignSubDocId(document.Expenses);
 
@@ -99,11 +141,11 @@ namespace SaveWise.BusinessLogic.Services
             IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
             var filter = new PlansFilter
             {
-                FilterExpression = plan => document.StartDate <= plan.StartDate,
                 PageSize = 1
             };
+            filter.SetFilters(plan => document.StartDate <= plan.StartDate);
 
-            List<Plan> existingCurrentPlans = await repo.GetAsync(filter);
+            IList<Plan> existingCurrentPlans = await repo.GetAsync(filter);
             if (existingCurrentPlans.Any())
             {
                 throw new DuplicateNameException("Już istnieje plan budżetowy dla wybranego okresu");
@@ -186,7 +228,7 @@ namespace SaveWise.BusinessLogic.Services
             return plan;
         }
 
-        public async Task<IList<Income>> GetPlanIncomes(string planId)
+        public async Task<IList<Income>> GetPlanIncomesAsync(string planId)
         {
             IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
             Plan plan = await repo.GetByIdAsync(planId);
@@ -199,18 +241,18 @@ namespace SaveWise.BusinessLogic.Services
             return plan.Incomes;
         }
 
-        public async Task UpdatePlanIncomes(string planId, IList<Income> incomes)
+        public async Task UpdatePlanIncomesAsync(string planId, IList<Income> incomes)
         {
-            await ExecuteWithPlan(planId, async (plan, repo) =>
+            await ExecuteWithPlanAsync(planId, async (plan, repo) =>
             {
                 plan.Incomes = incomes;
                 await repo.UpdateAsync(planId, plan);
             });
         }
 
-        public async Task<PlanSummary> GetSummary(string planId)
+        public async Task<PlanSummary> GetSummaryAsync(string planId)
         {
-            return await ExecuteWithPlan(planId, async (plan, repository) =>
+            return await ExecuteWithPlanAsync(planId, async (plan, repository) =>
             {
                 return await Task.Factory.StartNew(() => new PlanSummary
                 {
@@ -239,7 +281,7 @@ namespace SaveWise.BusinessLogic.Services
             });
         }
 
-        private async Task ExecuteWithPlan(string planId, Func<Plan, IGenericRepository<Plan>, Task> func)
+        private async Task ExecuteWithPlanAsync(string planId, Func<Plan, IGenericRepository<Plan>, Task> func)
         {
             IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
             Plan plan = await repo.GetByIdAsync(planId);
@@ -252,7 +294,7 @@ namespace SaveWise.BusinessLogic.Services
             await func(plan, repo);
         }
 
-        private async Task<T> ExecuteWithPlan<T>(string planId, Func<Plan, IGenericRepository<Plan>, Task<T>> func)
+        private async Task<T> ExecuteWithPlanAsync<T>(string planId, Func<Plan, IGenericRepository<Plan>, Task<T>> func)
         {
             IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
             Plan plan = await repo.GetByIdAsync(planId);
@@ -277,7 +319,7 @@ namespace SaveWise.BusinessLogic.Services
             {
                 return;
             }
-            
+
             foreach (var item in items)
             {
                 if (string.IsNullOrWhiteSpace(item.Id))
