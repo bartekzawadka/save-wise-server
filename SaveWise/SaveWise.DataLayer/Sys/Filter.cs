@@ -11,10 +11,11 @@ namespace SaveWise.DataLayer.Sys
         private int _pageSize = 10;
         private int _pageIndex;
 
-        public List<Expression<Func<T, bool>>> FilterExpressions { get; private set; } = new List<Expression<Func<T, bool>>>
-        {
-            entity => true
-        };
+        public List<Expression<Func<T, bool>>> FilterExpressions { get; private set; } =
+            new List<Expression<Func<T, bool>>>
+            {
+                entity => true
+            };
 
         public int PageSize
         {
@@ -25,12 +26,19 @@ namespace SaveWise.DataLayer.Sys
                 {
                     value = 10;
                 }
-                
+
                 _pageSize = value;
             }
         }
 
-        public List<ColumnSort> Sorting { get; set; }
+        public virtual List<ColumnSort> Sorting { get; set; } = new List<ColumnSort>
+        {
+            new ColumnSort
+            {
+                ColumnName = nameof(Document.Id),
+                IsDescending = false
+            }
+        };
 
         public int PageIndex
         {
@@ -41,7 +49,7 @@ namespace SaveWise.DataLayer.Sys
                 {
                     value = 0;
                 }
-                
+
                 _pageIndex = value;
             }
         }

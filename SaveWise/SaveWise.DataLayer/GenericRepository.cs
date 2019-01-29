@@ -41,9 +41,6 @@ namespace SaveWise.DataLayer
             }
             
             IFindFluent<TCollection, TCollection> query = Collection.Find(BuildFilterDefinition(filter));
-            
-            query = query.Skip(filter.PageIndex * filter.PageSize);
-            query = query.Limit(filter.PageSize);
 
             if (filter.Sorting?.Count > 0)
             {
@@ -64,6 +61,9 @@ namespace SaveWise.DataLayer
                     query = query.Sort(sortDefinitionFunc());
                 }
             }
+            
+            query = query.Skip(filter.PageIndex * filter.PageSize);
+            query = query.Limit(filter.PageSize);
 
             return query.Project(selectClause).ToListAsync();
         }

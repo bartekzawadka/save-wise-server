@@ -31,6 +31,47 @@ namespace SaveWise.BusinessLogic.Services
             _incomeCategoryService = incomeCategoryService;
         }
 
+        public async Task<IList<PlanListItem>> GetAsync(PlansFilter filter)
+        {
+            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
+
+            var currentPlanFilter = new PlansFilter
+            {
+                PageSize = 1
+            };
+            currentPlanFilter.SetFilters(GetCurrentPlanCondition());
+
+            string currentPlanId = (await repo.GetAsAsync(plan => plan.Id, currentPlanFilter))
+                .FirstOrDefault();
+
+            var searchFilter = filter ?? new PlansFilter();
+            var filterExpressions = new List<Expression<Func<Plan, bool>>>();
+
+            if (searchFilter.DateTo != null)
+            {
+                filterExpressions.Add(plan => plan.EndDate == null || plan.EndDate <= searchFilter.DateTo);
+            }
+
+            if (searchFilter.DateFrom != null)
+            {
+                filterExpressions.Add(plan => plan.StartDate == null || plan.StartDate >= searchFilter.DateFrom);
+            }
+
+            searchFilter.SetFilters(filterExpressions.ToArray());
+
+            Expression<Func<Plan, PlanListItem>> planSummaryMapExpression = plan => new PlanListItem
+            {
+                Id = plan.Id,
+                StartDate = plan.StartDate,
+                EndDate = plan.EndDate,
+                IncomesSum = plan.Incomes.Sum(income => income.Amount),
+                ExpensesSum = plan.Expenses.Sum(expense => expense.Amount),
+                IsActive = plan.Id == currentPlanId
+            };
+
+            return await repo.GetAsAsync(planSummaryMapExpression, searchFilter);
+        }
+
         public async Task<PlanSummary> GetCurrentPlanSummaryAsync()
         {
             IGenericRepository<Plan> plansRepo = RepositoryFactory.GetGenericRepository<Plan>();
@@ -39,7 +80,7 @@ namespace SaveWise.BusinessLogic.Services
                 PageSize = 1
             };
             filter.SetFilters(GetCurrentPlanCondition());
-            
+
             IList<Plan> plans = await plansRepo.GetAsync(filter);
             if (plans == null || plans.Count == 0 || plans.Count > 1)
             {
@@ -238,63 +279,6 @@ namespace SaveWise.BusinessLogic.Services
                         }).ToList()
                 });
             });
-        }
-
-        public async Task<List<PlanSummary>> GetHistoricPlansAsync(PlansFilter filter)
-        {
-            IGenericRepository<Plan> repo = RepositoryFactory.GetGenericRepository<Plan>();
-
-            var currentPlanFilter = new PlansFilter
-            {
-                PageSize = 1
-            };
-            currentPlanFilter.SetFilters(GetCurrentPlanCondition());
-            
-            string currentPlanId = (await repo.GetAsAsync(plan=>plan.Id, currentPlanFilter))
-                .FirstOrDefault();
-
-            var searchFilter = filter ?? new PlansFilter();
-            var filterExpressions = new List<Expression<Func<Plan, bool>>>();
-
-            if (searchFilter.DateTo != null)
-            {
-                filterExpressions.Add(plan => plan.EndDate == null || plan.EndDate <= searchFilter.DateTo);
-            }
-
-            if (searchFilter.DateFrom != null)
-            {
-                filterExpressions.Add(plan => plan.StartDate == null || plan.StartDate >= searchFilter.DateFrom);
-            }
-
-            searchFilter.SetFilters(filterExpressions.ToArray());
-
-            Expression<Func<Plan, PlanSummary>> planSummaryMapExpression = plan => new PlanSummary
-            {
-                Id = plan.Id,
-                StartDate = plan.StartDate,
-                EndDate = plan.EndDate,
-                IncomesSum = plan.Incomes.Sum(income => income.Amount),
-                ExpensesSum = plan.Expenses.Sum(expense => expense.Amount),
-                ExpensesPerCategory = plan.Expenses
-                    .GroupBy(key => key.Category)
-                    .Select(item => new SumPerCategory
-                    {
-                        Category = item.Key,
-                        Sum = item.Sum(x => x.Amount),
-                        PlannedSum = item.Sum(x => x.PlannedAmount)
-                    }).ToList(),
-                IncomesPerCategory = plan.Incomes
-                    .GroupBy(key => key.Category)
-                    .Select(item => new SumPerCategory
-                    {
-                        Category = item.Key,
-                        Sum = item.Sum(x => x.Amount),
-                        PlannedSum = item.Sum(x => x.PlannedAmount)
-                    }).ToList(),
-                IsActive = plan.Id == currentPlanId
-            };
-
-            return await repo.GetAsAsync(planSummaryMapExpression, searchFilter);
         }
 
         private async Task ExecuteWithPlanAsync(string planId, Func<Plan, IGenericRepository<Plan>, Task> func)

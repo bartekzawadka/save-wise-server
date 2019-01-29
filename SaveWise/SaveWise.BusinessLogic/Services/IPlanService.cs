@@ -8,6 +8,8 @@ namespace SaveWise.BusinessLogic.Services
 {
     public interface IPlanService : IService<Plan>
     {
+        Task<IList<PlanListItem>> GetAsync(PlansFilter filter);
+        
         Task<PlanSummary> GetCurrentPlanSummaryAsync();
 
         Task<Plan> GetNewPlanAsync();
@@ -17,7 +19,5 @@ namespace SaveWise.BusinessLogic.Services
         Task UpdatePlanIncomesAsync(string planId, IList<Income> incomes);
 
         Task<PlanSummary> GetSummaryAsync(string planId);
-
-        Task<List<PlanSummary>> GetHistoricPlansAsync(PlansFilter filter);
     }
 }

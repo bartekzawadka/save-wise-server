@@ -7,7 +7,6 @@ using SaveWise.BusinessLogic.Services;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Models.Filters;
 using SaveWise.DataLayer.Models.Plans;
-using SaveWise.DataLayer.Sys;
 
 namespace SaveWise.Api.Controllers
 {
@@ -21,17 +20,10 @@ namespace SaveWise.Api.Controllers
             _planService = planService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        [HttpPost("list")]
+        public async Task<IActionResult> Get([FromBody] PlansFilter filter)
         {
-            IList<Plan> plans = await _planService.GetAsync<Filter<Plan>>(null);
-            return Ok(plans);
-        }
-
-        [HttpPost("history")]
-        public async Task<IActionResult> GetHistory(PlansFilter filter)
-        {
-            IList<PlanSummary> plans = await _planService.GetHistoricPlansAsync(filter);
+            IList<PlanListItem> plans = await _planService.GetAsync(filter);
             return Ok(plans);
         }
 
