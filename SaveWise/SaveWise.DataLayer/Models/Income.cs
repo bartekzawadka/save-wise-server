@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SaveWise.DataLayer.Models
 {
-    public class Income
+    public class Income : SubDocument
     {
         [Required(ErrorMessage = "Kategoria przychodu jest wymagana")]
         public string Category { get; set; }

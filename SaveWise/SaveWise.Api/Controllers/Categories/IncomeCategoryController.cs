@@ -20,7 +20,7 @@ namespace SaveWise.Api.Controllers.Categories
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            List<IncomeCategory> categories = await _categoryService.GetAsync<Filter<IncomeCategory>>(null);
+            IList<IncomeCategory> categories = await _categoryService.GetAsync<Filter<IncomeCategory>>(null);
             return Ok(categories);
         }
 

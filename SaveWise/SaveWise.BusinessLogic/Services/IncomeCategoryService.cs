@@ -22,7 +22,7 @@ namespace SaveWise.BusinessLogic.Services
             
             IGenericRepository<IncomeCategory> repo = RepositoryFactory.GetGenericRepository<IncomeCategory>();
 
-            List<IncomeCategory> categories = await repo.GetAsync<Filter<IncomeCategory>>();
+            IList<IncomeCategory> categories = await repo.GetAsync<Filter<IncomeCategory>>();
             List<string> categoryNames = categories.Select(c => c.Name.ToLower().Trim()).ToList();
 
             List<IncomeCategory> missingCategories = documents

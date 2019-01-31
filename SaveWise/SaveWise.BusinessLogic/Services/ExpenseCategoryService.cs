@@ -18,10 +18,10 @@ namespace SaveWise.BusinessLogic.Services
         public override async Task InsertAsync(ExpenseCategory document)
         {
             IGenericRepository<ExpenseCategory> repo = RepositoryFactory.GetGenericRepository<ExpenseCategory>();
-            ExpenseCategory expenseCategory = (await repo.GetAsync(new Filter<ExpenseCategory>
-            {
-                FilterExpression = category => string.Equals(category.Name, document.Name)
-            })).FirstOrDefault();
+            ExpenseCategory expenseCategory = (await repo.GetAsync(
+                new Filter<ExpenseCategory>()
+                    .AppendFilters(category => string.Equals(category.Name, document.Name))
+            )).FirstOrDefault();
 
             if (string.IsNullOrWhiteSpace(document.Name))
             {
@@ -93,8 +93,7 @@ namespace SaveWise.BusinessLogic.Services
                 return;
             }
             
-            List<ExpenseCategory> expenseCategories =
-                await GetAsync<Filter<ExpenseCategory>>(null);
+            IList<ExpenseCategory> expenseCategories = await GetAsync<Filter<ExpenseCategory>>(null);
 
             Dictionary<string, IEnumerable<ExpenseType>> expenseCategoriesDict = expenseCategories
                 .ToDictionary(category => category.Name, category => category.Types);
@@ -126,10 +125,11 @@ namespace SaveWise.BusinessLogic.Services
                     continue;
                 }
 
-                ExpenseCategory currentCategory = (await GetAsync(new Filter<ExpenseCategory>
-                {
-                    FilterExpression = category => string.Equals(category.Name, expenseCategory.Name)
-                })).SingleOrDefault();
+                ExpenseCategory currentCategory = (await GetAsync(
+                        new Filter<ExpenseCategory>()
+                            .AppendFilters(
+                                category => string.Equals(category.Name, expenseCategory.Name)))
+                    ).SingleOrDefault();
                 
                 if (currentCategory == null)
                 {

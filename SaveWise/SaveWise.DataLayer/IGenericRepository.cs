@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-using MongoDB.Driver;
 using SaveWise.DataLayer.Models;
 using SaveWise.DataLayer.Sys;
 
@@ -11,6 +12,11 @@ namespace SaveWise.DataLayer
         string CollectionName { get; }
 
         Task<List<TCollection>> GetAsync<TFilter>(TFilter filter = null)
+            where TFilter : Filter<TCollection>, new();
+
+        Task<List<TNew>> GetAsAsync<TFilter, TNew>(
+            Expression<Func<TCollection, TNew>> selectClause,
+            TFilter filter = null)
             where TFilter : Filter<TCollection>, new();
 
         Task<TCollection> GetByIdAsync(string id);
