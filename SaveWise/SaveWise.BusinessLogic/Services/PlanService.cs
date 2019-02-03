@@ -111,29 +111,36 @@ namespace SaveWise.BusinessLogic.Services
 
         public override async Task UpdateAsync(string id, Plan document)
         {
-            await _incomeCategoryService.InsertManyAsync(document.Incomes?.Select(x => new IncomeCategory
+            await SyncCategoriesAsync<IncomeCategory>(document);
+            await SyncCategoriesAsync<ExpenseCategory>(document);
+
+            var repo = RepositoryFactory.GetGenericRepository<Plan>();
+            
+            List<IList<Expense>> dbExpenses = await repo.GetAsAsync(
+                plan => plan.Expenses,
+                new PlansFilter().AppendFilters(plan => string.Equals(plan.Id, id)));
+            
+            IList<Expense> currentPlanDbExpenses = dbExpenses.First();
+            
+            if (document.Expenses?.Any() == true && currentPlanDbExpenses?.Any() == true)
             {
-                Name = x.Category
-            }));
+                var dbRegisteredExpenses = currentPlanDbExpenses
+                    .Where(item => item.PlannedAmount <= 0.0f && item.Amount > 0.0f)
+                    .ToList();
+                var newPlannedExpenses = document.Expenses.Where(item => item.PlannedAmount > 0.0f).ToList();
+                
+                newPlannedExpenses.AddRange(dbRegisteredExpenses);
 
-            IEnumerable<ExpenseCategory> expenseCategories = document
-                .Expenses?
-                .GroupBy(x => x.Category)
-                .Select(y => new ExpenseCategory
-                {
-                    Name = y.Key,
-                    Types = y.Select(t => new ExpenseType
-                    {
-                        Name = t.Type
-                    }).ToList()
-                });
-
-            await _expenseCategoryService.InsertManyAsync(expenseCategories);
-
-            AssignSubDocId(document.Incomes);
-            AssignSubDocId(document.Expenses);
+                document.Expenses = newPlannedExpenses;
+            }
 
             await base.UpdateAsync(id, document);
+        }
+
+        public async Task UpdateExpensesAsync(string planId, Plan plan)
+        {
+            await SyncCategoriesAsync<ExpenseCategory>(plan);
+            await base.UpdateAsync(planId, plan);
         }
 
         public override async Task InsertAsync(Plan document)
@@ -151,27 +158,8 @@ namespace SaveWise.BusinessLogic.Services
                 throw new DuplicateNameException("Już istnieje plan budżetowy dla wybranego okresu");
             }
 
-            await _incomeCategoryService.InsertManyAsync(document.Incomes?.Select(x => new IncomeCategory
-            {
-                Name = x.Category
-            }));
-
-            IEnumerable<ExpenseCategory> expenseCategories = document
-                .Expenses?
-                .GroupBy(x => x.Category)
-                .Select(y => new ExpenseCategory
-                {
-                    Name = y.Key,
-                    Types = y.Select(t => new ExpenseType
-                    {
-                        Name = t.Type
-                    }).ToList()
-                });
-
-            await _expenseCategoryService.InsertManyAsync(expenseCategories);
-
-            AssignSubDocId(document.Incomes);
-            AssignSubDocId(document.Expenses);
+            await SyncCategoriesAsync<IncomeCategory>(document);
+            await SyncCategoriesAsync<ExpenseCategory>(document);
 
             await repo.InsertAsync(document);
         }
@@ -326,6 +314,37 @@ namespace SaveWise.BusinessLogic.Services
                 {
                     item.Id = Guid.NewGuid().ToString();
                 }
+            }
+        }
+
+        private async Task SyncCategoriesAsync<T>(Plan document) where T : Category
+        {
+            if (typeof(T) == typeof(IncomeCategory))
+            {
+                await _incomeCategoryService.InsertManyAsync(document.Incomes?.Select(x => new IncomeCategory
+                {
+                    Name = x.Category
+                }));
+
+                AssignSubDocId(document.Incomes);
+            }
+            else if (typeof(T) == typeof(ExpenseCategory))
+            {
+                IEnumerable<ExpenseCategory> expenseCategories = document
+                    .Expenses?
+                    .GroupBy(x => x.Category)
+                    .Select(y => new ExpenseCategory
+                    {
+                        Name = y.Key,
+                        Types = y.Select(t => new ExpenseType
+                        {
+                            Name = t.Type
+                        }).ToList()
+                    });
+
+                await _expenseCategoryService.InsertManyAsync(expenseCategories);
+                
+                AssignSubDocId(document.Expenses);
             }
         }
     }
