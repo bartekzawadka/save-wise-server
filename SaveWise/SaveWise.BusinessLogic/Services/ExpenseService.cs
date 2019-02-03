@@ -85,7 +85,7 @@ namespace SaveWise.BusinessLogic.Services
             expenses.Add(expense);
             plan.Expenses = expenses;
 
-            await _planService.UpdateAsync(planId, plan);
+            await _planService.UpdateExpensesAsync(planId, plan);
         }
 
         public async Task InsertAsync(string planId, Expense expense)
@@ -100,7 +100,7 @@ namespace SaveWise.BusinessLogic.Services
             expense.Id = Guid.NewGuid().ToString();
             plan.Expenses.Add(expense);
 
-            await _planService.UpdateAsync(planId, plan);
+            await _planService.UpdateExpensesAsync(planId, plan);
         }
 
         public async Task DeleteAsync(string planId, string expenseId)
@@ -125,7 +125,7 @@ namespace SaveWise.BusinessLogic.Services
             List<Expense> expenses = plan.Expenses.Where(e => !string.Equals(e.Id, expenseId)).ToList();
             plan.Expenses = expenses;
 
-            await _planService.UpdateAsync(planId, plan);
+            await _planService.UpdateExpensesAsync(planId, plan);
         }
     }
 }
