@@ -44,10 +44,6 @@ namespace SaveWise.BusinessLogic.Services
                 expenses = expenses.Where(item => item.Date != null && item.Date >= expenseFilter.DateFrom);
             }
 
-            expenses = expenses
-                .Skip(expenseFilter.PageIndex * expenseFilter.PageSize)
-                .Take(expenseFilter.PageSize);
-
             Dictionary<string, List<Expense>> dict = expenses
                 .GroupBy(x => x.Category, x => x)
                 .ToDictionary(expense => expense.Key, expense => expense.ToList());
