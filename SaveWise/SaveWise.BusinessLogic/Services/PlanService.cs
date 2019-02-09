@@ -160,6 +160,11 @@ namespace SaveWise.BusinessLogic.Services
 
             await SyncCategoriesAsync<IncomeCategory>(document);
             await SyncCategoriesAsync<ExpenseCategory>(document);
+            
+            if (document.Expenses?.Any() == true)
+            {
+                document.Expenses = document.Expenses.Where(item => item.PlannedAmount > 0.0f).ToList();
+            }
 
             await repo.InsertAsync(document);
         }
