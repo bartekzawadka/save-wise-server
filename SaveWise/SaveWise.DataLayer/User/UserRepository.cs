@@ -20,7 +20,8 @@ namespace SaveWise.DataLayer.User
 
         public async Task<Models.Users.User> GetByIdAsync(string id)
         {
-            IAsyncCursor<Models.Users.User> result = await GetUserCollection().FindAsync(user => string.Equals(user.Id, id));
+            IAsyncCursor<Models.Users.User> result = await GetUserCollection()
+                .FindAsync(user => string.Equals(user.Id, id));
             return await result.SingleOrDefaultAsync();
         }
 
