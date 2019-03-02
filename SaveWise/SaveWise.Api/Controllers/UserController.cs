@@ -40,15 +40,7 @@ namespace SaveWise.Api.Controllers
             try
             {
                 User user = await _userService.AuthenticateAsync(userData.Username, userData.Password);
-
-                string tokenString = GetTokenString(user);
-
-                return Ok(new
-                {
-                    user.Id,
-                    user.Username,
-                    Token = tokenString
-                });
+                return Ok(GetApiToken(user));
             }
             catch (AuthenticationException ae)
             {
@@ -60,7 +52,14 @@ namespace SaveWise.Api.Controllers
             }
         }
 
-        private string GetTokenString(User user)
+        [HttpGet("refreshToken")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            User user = await _userService.GetByIdAsync(HttpContext.User.Identity.Name);
+            return Ok(GetApiToken(user));
+        }
+
+        private ApiToken GetApiToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             byte[] key = Encoding.ASCII.GetBytes(_securitySettings.Value.Secret);
@@ -78,7 +77,14 @@ namespace SaveWise.Api.Controllers
 
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
             string tokenString = tokenHandler.WriteToken(token);
-            return tokenString;
+
+            return new ApiToken
+            {
+                Token = tokenString,
+                Expires = tokenDescriptor.Expires,
+                Username = user.Username,
+                Id = user.Id
+            };
         }
 
         [AllowAnonymous]
@@ -93,14 +99,7 @@ namespace SaveWise.Api.Controllers
             try
             {
                 User userCreated = await _userService.CreateAsync(user);
-                string tokenString = GetTokenString(userCreated);
-
-                return Ok(new
-                {
-                    userCreated.Id,
-                    userCreated.Username,
-                    Token = tokenString
-                });
+                return Ok(GetApiToken(userCreated));
             }
             catch (ArgumentNullException ane)
             {

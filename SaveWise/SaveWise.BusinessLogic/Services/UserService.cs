@@ -25,6 +25,11 @@ namespace SaveWise.BusinessLogic.Services
             return _userRepository.GetById(id);
         }
 
+        public Task<User> GetByIdAsync(string id)
+        {
+            return _userRepository.GetByIdAsync(id);
+        }
+
         public async Task<User> AuthenticateAsync(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username))

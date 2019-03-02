@@ -8,6 +8,8 @@ namespace SaveWise.BusinessLogic.Services
     {
         User GetById(string id);
 
+        Task<User> GetByIdAsync(string id);
+
         Task<User> AuthenticateAsync(string username, string password);
 
         Task<User> CreateAsync(Register registration);
