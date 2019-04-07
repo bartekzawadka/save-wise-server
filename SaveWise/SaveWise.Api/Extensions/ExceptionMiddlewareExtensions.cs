@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using SaveWise.DataLayer.Sys.Exceptions;
 
 namespace SaveWise.Api.Extensions
@@ -32,6 +33,11 @@ namespace SaveWise.Api.Extensions
                                 return;
                             case DocumentNotFoundException _:
                                 context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                                var json = JsonConvert.SerializeObject(new
+                                {
+                                    error = contextFeature.Error.Message
+                                });
+                                await context.Response.WriteAsync(json);
                                 return;
                             default:
                                 await context.Response.WriteAsync(new ErrorResult("Internal Server Error.").ToString());
